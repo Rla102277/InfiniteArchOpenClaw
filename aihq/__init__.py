@@ -1,2 +1,2 @@
-"""Personal AI HQ starter package."""
-__version__ = "0.1.0"
+"""InfiniteArch Agentic OS: portable brain and private local runtime."""
+__version__ = "1.0.0"

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "project-board",
+  "name": "Project Board",
+  "description": "Organize generic project tasks and notes in a local record board.",
+  "template": "project-board",
+  "kind": "record-board",
+  "fields": ["title", "status", "note"],
+  "permissions": ["local.records"],
+  "version": "1.0.0"
+}

@@ -1,34 +1,65 @@
-# Personal AI HQ Bootstrap v0.4 — Fork → Clone → Bootstrap → First Push
+# InfiniteArch Agentic OS
 
-A Mac-first AI engineering starter with a local project dashboard, ten bundled first-party engineering skills, guided tool installation, a private workspace seeder, and a safe initial push to your own GitHub fork.
+A GitHub-native, local-first agent workspace. Your repository is the versioned brain. Your machine holds private records, credentials, memory and execution state. Any coding agent can read the same contracts and continue the work.
 
-**Start here: [START_HERE.md](START_HERE.md).** Detailed beginner walkthrough: [docs/FORK_START.md](docs/FORK_START.md).
+This is an application and coordination layer, not a replacement macOS kernel. Built-in operations need no AI subscription or third-party Python packages. Hermes is the preferred conversational coordinator; providers and coding tools remain replaceable.
 
-## First-time setup
+## Start
 
-1. Create a GitHub account and get access to this private InfiniteArch repository.
-2. Click **Fork** to create your own copy, then **Clone your fork** with GitHub Desktop (do not Download ZIP).
-3. In GitHub Desktop choose **Repository → Open in Terminal**.
-4. Run:
+Fork this repository, clone **your fork**, then:
 
 ```bash
 ./bootstrap.sh
+./hq start
 ```
 
-The bootstrap may stop to request installation of Apple Command Line Tools, Homebrew, or Hermes Desktop. Follow the official prompts, then **rerun the same command**. It safely preserves existing workspace files.
+The dashboard opens at `http://127.0.0.1:8731`. Bootstrap never executes remote installers or weakens macOS security. The first onboarding push requires a typed `PUSH`, verifies fork ownership and supports retry without duplicate commits. Python 3.10+ and Git support local operation; GitHub CLI supports fork onboarding. See [Start here](START_HERE.md) and [fork walkthrough](docs/FORK_START.md).
 
-When GitHub authentication, Codex, and Hermes are ready, the bootstrap checks that the remote belongs to your GitHub account and GitHub confirms it is a fork. Type **PUSH** to approve a generic first commit to your fork. If the network push fails, rerun `./scripts/first-push.sh` — it reuses the saved commit.
-
-## Using your HQ
+Without onboarding or GitHub authentication:
 
 ```bash
-./hq start      # Local browser dashboard: http://127.0.0.1:8731
-./hq chat       # Start a guided Hermes conversation
-./hq test       # Run built-in tests
+./hq validate
+./hq init
+./hq start --no-browser
+# In another terminal:
+./hq worker
 ```
 
-Seeded private local workspace: `~/PersonalAIHQ`. Repo-local project files: `projects/` (never put secrets there). Bundled skills: grill-me, wayfinder, specify, architect, build-slice, verify, review, release, reflect and hq-router. External Pocock/Osmani/pstack skills are not installed automatically.
+## Working features
 
-**Currently functional:** bootstrap, local dashboard, project and review records, skills/instructions, local tests, fork validation and first Git push. **Not yet functional:** autonomous agent orchestration inside the browser, Mac mini production deployment, unattended creation of full applications. Hermes, Codex and model/provider access are separate.
+- **App builder:** interview → Wayfinder plan → exact specification preview → explicit approval → runnable declarative record board. Install, enable and use the app in the dashboard.
+- **Private operations:** SQLite tasks, app records, memory, approvals, activity history and dashboard preferences survive restarts outside the checkout.
+- **Automation:** interval schedules execute versioned allowlisted workflows. The included daily digest updates persistent memory without a model. Missed intervals coalesce; a worker must be running.
+- **Control center:** three versioned themes, customizable visible panels, app lifecycle, task results, memory, agent availability and truthful capability statuses.
+- **Approvals:** external requests require approval bound to the payload, brain fingerprint, Git revision and executable. Browser ticks execute built-in operations only. External execution also requires `./hq worker --allow-external` locally.
+- **Portable GitOps brain:** Markdown vault, first-party skills, contracts, manifests and handoffs. Validate/reconcile locally; preview and confirm clean fast-forward GitHub pulls. No automatic push, merge or deployment.
 
-The ZIP under `releases/` is the older v0.3 snapshot. **Fork and clone the current main branch for v0.4 source.**
+## GitHub versus machine
+
+| Versioned brain | Private local state |
+| --- | --- |
+| `AGENTS.md`, `system/`, `vault/`, `.agents/skills/` | Provider credentials in native stores/Keychain |
+| `apps/`, `agents/`, `workflows/`, `themes/` | `~/PersonalAIHQ/runtime/os.sqlite3` |
+| Architecture, handoffs and tests | `~/PersonalAIHQ/private/`, `secrets/`, `logs/`, `exports/` |
+
+Set `AIHQ_HOME` to an absolute private directory outside the checkout to change its location. Generated app specifications intentionally enter Git only after your approval: keep their descriptions generic. Legacy project/review records now also stay in the private workspace.
+
+## Agents and boundaries
+
+Hermes, Codex and Claude adapters invoke installed CLIs without permission-bypass flags. Authentication and model setup are separate. Codex requests use read-only sandbox; Claude requests use plan mode with built-in tools disabled. Hermes retains configured native tools and approvals. An OS approval authorizes starting the selected program; **it is not a process sandbox**. Ollama also supports direct inference at a fixed loopback endpoint with an already downloaded model.
+
+**Devin is handoff-only.** Paid/cloud agent calls were not live-tested. Arbitrary application source generation, remote multiuser access, messaging integrations and production deployment are not claimed as implemented. Mac mini setup is documented, not provisioned. See [capabilities](docs/CAPABILITIES.md), [Hermes](docs/HERMES.md), [security](docs/SECURITY.md) and [architecture](docs/ARCHITECTURE.md).
+
+```bash
+./hq test
+./hq validate
+./hq handoff
+./hq reconcile
+./hq reconcile --pull             # fetch and preview; clean tracking branch required
+# Review git diff HEAD..@{u}, then:
+./hq reconcile --pull --confirm
+```
+
+[Runtime examples](docs/RUNTIME.md) cover tasks, schedules and backups. [Portability](docs/PORTABILITY.md) covers agent/machine handoffs. CI checks contracts and tests on macOS and Linux. The [handoff](docs/HANDOFF.md) records limitations and rollback.
+
+The ZIP in `releases/` is an obsolete v0.3 archive retained for history. Clone current source for this OS.

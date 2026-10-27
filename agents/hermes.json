@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "hermes",
+  "role": "coordinator",
+  "adapter": "hermes",
+  "skills": ["hq-router", "grill-me", "wayfinder", "specify", "architect", "reflect"],
+  "permissions": ["tasks.read", "tasks.propose", "approvals.request"]
+}

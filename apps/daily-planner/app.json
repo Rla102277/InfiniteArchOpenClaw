@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "daily-planner",
+  "name": "Daily Planner",
+  "description": "Arrange generic daily priorities and notes in a local record board.",
+  "template": "daily-planner",
+  "kind": "record-board",
+  "fields": ["title", "status", "note"],
+  "permissions": ["local.records"],
+  "version": "1.0.0"
+}

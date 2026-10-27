@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "reading-room",
+  "name": "Reading Room",
+  "description": "Keep a generic reading queue and notes in a local record board.",
+  "template": "reading-room",
+  "kind": "record-board",
+  "fields": ["title", "status", "note"],
+  "permissions": ["local.records"],
+  "version": "1.0.0"
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hmac
 import json
 import secrets
+import sqlite3
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -14,7 +15,14 @@ ASSETS = core.ROOT / "web"
 MAX_BODY = 16000
 
 
-def make_handler(secret: str):
+def make_handler(secret: str, runtime=None):
+    def local_runtime():
+        nonlocal runtime
+        if runtime is None:
+            from .runtime import Runtime
+            runtime = Runtime()
+        return runtime
+
     class Handler(BaseHTTPRequestHandler):
         server_version = "PersonalHQ/0.1"
 
@@ -40,9 +48,19 @@ def make_handler(secret: str):
         def do_GET(self):
             if not self._safe_host():
                 return self._json(403, {"error": "Localhost only"})
+            if not self._safe_origin():
+                return self._json(403, {"error": "Same-origin only"})
             path = urlparse(self.path).path
+            if path == "/api/os/state":
+                try:
+                    return self._json(200, local_runtime().snapshot())
+                except (ValueError, OSError, sqlite3.Error) as exc:
+                    return self._json(400, {"error": str(exc)})
             if path == "/api/state":
-                return self._json(200, core.state())
+                try:
+                    return self._json(200, core.state())
+                except (ValueError, OSError) as exc:
+                    return self._json(400, {"error": str(exc)})
             if path == "/api/csrf":
                 return self._json(200, {"token": secret})
             assets = {"/": ("index.html", "text/html; charset=utf-8"),
@@ -53,15 +71,18 @@ def make_handler(secret: str):
             filename, mime = assets[path]
             return self._respond(200, (ASSETS / filename).read_bytes(), mime)
 
+        def _safe_origin(self):
+            expected = {f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}
+            origin = self.headers.get("Origin")
+            return (origin is None or origin in expected) and self.headers.get("Sec-Fetch-Site", "none") != "cross-site"
+
         def do_POST(self):
             if not self._safe_host():
                 return self._json(403, {"error": "Localhost only"})
             # Same-origin check plus per-process CSRF token. Browser never talks beyond loopback.
-            origin = self.headers.get("Origin", "")
-            expected = f"http://127.0.0.1:{self.server.server_port}"
-            if origin and origin not in (expected, f"http://localhost:{self.server.server_port}"):
+            if not self._safe_origin():
                 return self._json(403, {"error": "Invalid origin"})
-            if not hmac.compare_digest(self.headers.get("X-HQ-Token", ""), secret):
+            if not hmac.compare_digest(self.headers.get("X-HQ-Token", "").encode("utf-8"), secret.encode("utf-8")):
                 return self._json(403, {"error": "Invalid session token"})
             try:
                 length = int(self.headers.get("Content-Length", "0"))
@@ -73,7 +94,11 @@ def make_handler(secret: str):
                 if not isinstance(payload, dict):
                     raise ValueError("Expected object")
                 path = urlparse(self.path).path
-                if path == "/api/projects":
+                if path == "/api/os/action":
+                    if payload.get("action") == "task.recover":
+                        raise ValueError("Recover interrupted tasks from the local CLI only.")
+                    result = local_runtime().action(payload)
+                elif path == "/api/projects":
                     result = core.create_project(payload.get("name"), payload.get("idea"))
                 elif path == "/api/features":
                     result = core.create_feature(payload.get("project"), payload.get("title"), payload.get("description"))
@@ -82,7 +107,7 @@ def make_handler(secret: str):
                 else:
                     return self._json(404, {"error": "Not found"})
                 self._json(201, {"ok": True, "result": result})
-            except (ValueError, TypeError, json.JSONDecodeError) as exc:
+            except (ValueError, TypeError, OSError, RecursionError, sqlite3.Error, json.JSONDecodeError) as exc:
                 self._json(400, {"error": str(exc)})
 
         def log_message(self, fmt, *args):
@@ -96,10 +121,16 @@ def serve(host: str = "127.0.0.1", port: int = 8731, open_browser: bool = True) 
     if host != "127.0.0.1":
         raise ValueError("HQ starter only supports loopback binding")
     secret = secrets.token_urlsafe(32)
-    server = ThreadingHTTPServer((host, port), make_handler(secret))
+    from .runtime import Runtime
+    runtime = Runtime()
+    with runtime.connect() as connection:
+        initial = runtime.meta(connection, "brain_fingerprint") is None
+    if initial:
+        runtime.reconcile()
+    server = ThreadingHTTPServer((host, port), make_handler(secret, runtime))
     url = f"http://{host}:{server.server_port}"
     print(f"Personal AI HQ is running at {url}")
-    print("Local-only: no remote network access or background AI execution is enabled.")
+    print("Local-only dashboard. Start ./hq worker separately for scheduled jobs.")
     print("Press Control-C to stop.")
     if open_browser:
         import webbrowser

@@ -6,17 +6,26 @@ No code execution or cloud API calls occur in this module.
 from __future__ import annotations
 
 import json
+import os
 import re
 import secrets
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from .storage import private_home, private_path
 
 ROOT = Path(__file__).resolve().parents[1]
-PROJECTS = ROOT / "projects"
+PRIVATE_HOME = Path(os.environ.get("AIHQ_HOME", str(Path.home() / "PersonalAIHQ"))).expanduser()
+PROJECTS = PRIVATE_HOME / "projects"
 SKILLS = ROOT / ".agents" / "skills"
 MAX_TEXT = 10000
+
+
+def projects_root():
+    if PROJECTS == PRIVATE_HOME / "projects":
+        return private_path(private_home(PRIVATE_HOME), "projects")
+    return private_home(PROJECTS)
 
 
 def timestamp() -> str:
@@ -58,9 +67,12 @@ def _append_event(folder: Path, event: str, message: str) -> None:
 def project_path(project: str) -> Path:
     if slugify(project) != project:
         raise ValueError("Invalid project identifier")
-    folder = PROJECTS / project
+    root = projects_root()
+    folder = private_path(root, project)
     if not (folder / "project.json").is_file() or folder.is_symlink():
         raise ValueError("Project not found")
+    if any(path.is_symlink() for path in folder.rglob("*")):
+        raise ValueError("Project paths must not contain symlinks.")
     return folder
 
 
@@ -68,10 +80,13 @@ def create_project(name: str, idea: str) -> dict:
     name = clean_text(name, 100)
     idea = clean_text(idea)
     slug = slugify(name)
-    folder = PROJECTS / slug
+    root = projects_root()
+    folder = private_path(root, slug)
     if folder.exists():
         raise ValueError("A project with that name already exists.")
-    folder.mkdir(parents=True, exist_ok=False)
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    root.chmod(0o700)
+    folder.mkdir(mode=0o700, exist_ok=False)
     (folder / "features").mkdir()
     (folder / "reviews").mkdir()
     (folder / "evidence").mkdir()
@@ -162,10 +177,12 @@ def state() -> dict:
     projects = []
     events = []
     pending = []
-    for folder in sorted(PROJECTS.iterdir()) if PROJECTS.exists() else []:
+    root = projects_root()
+    for folder in sorted(root.iterdir()) if root.exists() else []:
         if folder.is_symlink() or not folder.is_dir() or not (folder / "project.json").is_file():
             continue
         try:
+            project_path(folder.name)
             project = read_json(folder / "project.json")
             project["feature_count"] = len(list((folder / "features").glob("*.json")))
             projects.append(project)
