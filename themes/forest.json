@@ -1,0 +1,11 @@
+{
+  "id": "forest",
+  "name": "Forest",
+  "colors": {
+    "background": "#101C17",
+    "panel": "#1B2D24",
+    "text": "#EFF6EF",
+    "muted": "#B4C8B9",
+    "accent": "#9BDBA6"
+  }
+}

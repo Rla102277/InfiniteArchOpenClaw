@@ -1,0 +1,11 @@
+{
+  "id": "paper",
+  "name": "Paper",
+  "colors": {
+    "background": "#F7F3EA",
+    "panel": "#FFFDFA",
+    "text": "#262923",
+    "muted": "#5C645A",
+    "accent": "#28613F"
+  }
+}

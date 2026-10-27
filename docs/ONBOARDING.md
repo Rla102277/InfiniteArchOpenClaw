@@ -1,39 +1,69 @@
 # Friendly first-run guide for Mac
 
-## Before starting
+The local HQ needs Git and Python 3.10+. GitHub CLI is needed for the first push to your fork. Hermes and Codex are optional assistants; you can use the dashboard without either or a paid model account.
 
-You need a Mac with an administrator account, internet for initial tool downloads, a GitHub account, and access to a supported Hermes model/provider. Code-generation subscriptions or API usage can cost money. An existing GitHub repository can be private.
+## Start locally
 
-1. Extract the starter ZIP or clone the repo into a directory you control. Don't execute shell scripts from unknown repositories.
-2. Open Terminal. Enter the folder using `cd ` followed by dragging the folder into Terminal, then press Return.
-3. Run `./setup.sh`. It checks tools and offers optional Homebrew-based installs, never silently executing unknown internet scripts.
-4. If you need Homebrew, install it from https://brew.sh and rerun the setup. If you need Hermes, install the official macOS app from https://hermes-agent.nousresearch.com/docs/getting-started/quickstart. Reopen Terminal afterward.
-5. Configure `hermes setup --portal` or `hermes model` according to your provider and `codex login` if you'll use Codex; sign into GitHub with `gh auth login`.
-6. Read `.agents/skills/`. Only when you trust the cloned repository, run `hermes skills trust` within its folder, or accept the prompt during setup. Hermes intentionally does not trust cloned project skills by default.
-7. Run `./hq start`. A local browser page opens. Create a project and describe your idea.
-8. Run `./hq chat --project your-project-slug` in a second Terminal window. If you prefer Hermes Desktop, open this project as the workspace there and use the same process instructions.
-9. Ask Hermes to grill you on the requirements and write an approved first slice. Stay in control of any external tool permission prompts.
-
-## Fast commands
+Follow [Fork → Clone → Bootstrap](FORK_START.md). Open Terminal in your cloned fork and run:
 
 ```bash
-./setup.sh --check   # See installed tools without changing anything
-./hq doctor          # Health check
-./hq start           # Local dashboard
-./hq chat            # Conversational onboarding
-./hq chat --project your-project-slug
-./hq test            # Actual test suite
+./bootstrap.sh
 ```
 
-## Why isn't everything installed without asking?
+The script offers named installations for missing tools using an existing Homebrew installation, then seeds `AIHQ_HOME` (default `~/PersonalAIHQ`). It runs `./hq init` to initialize/reconcile declarations and the private database at `runtime/os.sqlite3` outside the repository, followed by read-only `./hq validate`, the health check and tests. No model is required. You may install the tools yourself; [Homebrew instructions](https://brew.sh/) are provided when needed. No remote installer is executed by the script, and no install happens without your affirmative answer. A Mac with the required tools can proceed without Homebrew.
 
-The package doesn't automatically fetch and execute unpinned third-party installers or massive skill packs. Software agents have filesystem and credential access, so the owner must explicitly approve those trust boundaries. The guided setup handles known Homebrew packages with permission, and directs you to the official Hermes installer.
+`./setup.sh` is an alias for this same flow. `--check` reports tools without changes. `--yes` skips installation and login offers and uses installed tools; it does not authorize a push. GitHub sign-in and the literal **PUSH** confirmation are separate from local verification. See [fork guards and recovery](FORK_START.md#consent-and-retries).
+
+After verification:
+
+```bash
+./hq start
+```
+
+Open http://127.0.0.1:8731. `./hq start` serves the browser interface; task processing is a separate process. If you want to process local tasks, open another Terminal in the checkout and run `./hq worker`, or `./hq worker --once` for one pass. Bootstrap does not start a worker. Dashboard approvals do not merge or deploy code. Stop each process with Control-C in its own terminal.
+
+## Optional Hermes assistant
+
+Install Hermes separately only when you want conversational assistance. Run `./hq hermes-plan` to print safe installation and local-model instructions without installing anything. The [official installation guide](https://hermes-agent.nousresearch.com/docs/getting-started/installation) describes the macOS Desktop package. Review its source and normal macOS installation prompts. This bootstrap neither installs Hermes nor disables Gatekeeper or quarantine checks. If macOS blocks an app, stop and verify the package with the publisher.
+
+After installing, reopen Terminal and check `hermes --help`. Desktop and CLI availability can differ; use the publisher's supported CLI setup if `hermes` is unavailable. The HQ remains usable while you resolve it.
+
+### Use a local model
+
+A hosted subscription is optional. Hermes supports local OpenAI-compatible model servers; see its [local-model FAQ](https://hermes-agent.nousresearch.com/docs/reference/faq#can-i-use-it-offline--with-local-models) and [model configuration guide](https://hermes-agent.nousresearch.com/docs/user-guide/configuring-models).
+
+1. Separately install a local model runtime you trust, such as Ollama or llama.cpp. Choose and download a model that fits the Mac's available memory and supports tool use; downloads need network access and disk space. Bootstrap does not install a runtime or download models.
+2. Start the runtime's API server bound to loopback only, load your chosen model and record its exact model identifier and supported context size.
+3. Run `hermes model` and choose **Custom endpoint**. Enter the local OpenAI-compatible base URL, such as `http://127.0.0.1:11434/v1` for a default Ollama server. Use the model identifier actually loaded, the runtime's documented local authentication setting, and a context size supported by both Hermes and that runtime.
+4. Verify the selected provider and model before chatting. Do not assume local inference also makes web tools, auxiliary models or integrations offline; review those separately before using private data.
+
+A hosted provider is another choice: use `hermes model` and review its billing and data handling. The bootstrap does not select a provider or subscribe for you.
+
+### Review skills before trusting
+
+Read `AGENTS.md` and the bundled `.agents/skills/` files. If you approve them, consult `hermes skills --help` for your installed version's trust command and scope. Skill trust is a separate manual decision; setup never grants it automatically.
+
+Then open a second Terminal in the checkout:
+
+```bash
+./hq chat
+./hq chat --project your-project-slug
+```
+
+Ask Hermes: “I'm not technical. Ask one question at a time, write the first plan, and wait for my approval before coding.” Use the actual project's slug for the second command. Resume with its `PROJECT.md`, `docs/ROADMAP.md`, `docs/DECISIONS.md` and `docs/HANDOFF.md` as described in [WORKFLOW.md](WORKFLOW.md).
+
+## Optional Codex
+
+Install and authenticate Codex separately if you want it as an implementation tool. It is not a requirement for local HQ, Hermes or first push. Review the tool's own installation and account instructions before installing; this bootstrap does not install it, log it in or grant it permissions.
 
 ## Quick problem solving
 
-- `./hq` says Python missing: install current Python with Homebrew and open a new Terminal.
-- `hermes` missing: install the Hermes Desktop/CLI app from the official site; open new Terminal.
-- Skills missing in Hermes: run `hermes skills trust` from the Git checkout and check `hermes skills list`.
-- GitHub not authenticated: run `gh auth login`.
-- Dashboard port in use: `./hq start --port 8732`.
-- Stop local dashboard: Control-C in its Terminal window.
+- Python missing or older than 3.10: install a supported Python, open a fresh Terminal and rerun bootstrap.
+- GitHub CLI missing or signed out: local setup still completes; later run `gh auth login` and `./scripts/first-push.sh`.
+- Push interrupted: rerun `./scripts/first-push.sh`; a saved onboarding commit is reused.
+- Tests fail: bootstrap stops before the push. Save the test output and fix the failure before retrying.
+- Hermes missing: the dashboard works; follow the optional assistant steps when ready.
+- Dashboard port in use: stop your old dashboard or run `./hq start --port 8732`.
+- Check tools without changes: `./setup.sh --check`. Run the health check with `./hq doctor` and the test suite with `./hq test`.
+
+Private runtime state lives in `AIHQ_HOME` (default `~/PersonalAIHQ`), including `runtime/os.sqlite3`; portable declarations and any versioned project files live in the checkout. Back up both locations before migration. See [MAC_MINI.md](MAC_MINI.md) for a manual local service example and rollback.

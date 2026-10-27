@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "devin",
+  "role": "implementer",
+  "adapter": "devin",
+  "skills": ["build-slice", "verify", "review"],
+  "permissions": ["tasks.read", "handoff.prepare"]
+}

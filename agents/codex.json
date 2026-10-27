@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "id": "codex",
+  "role": "implementer",
+  "adapter": "codex",
+  "skills": ["build-slice", "verify", "review"],
+  "permissions": ["tasks.read", "workspace.write", "verification.run"]
+}

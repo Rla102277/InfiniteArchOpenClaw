@@ -1,25 +1,15 @@
-# Start Here — Personal AI HQ v0.4
+# Start here
 
-**No coding experience required.** This guide is for someone starting on their own Mac.
+1. Fork this repository into your own GitHub account and clone your fork using GitHub Desktop or GitHub CLI. Private repositories can restrict forking.
+2. Open the clone in Terminal and run `./bootstrap.sh`. It checks prerequisites and prepares a private local workspace. Use official installers; stop and verify the publisher if macOS reports a security problem.
+3. If GitHub authentication and fork checks succeed, type `PUSH` to approve the generic onboarding commit to your fork. Retry failures with `./scripts/first-push.sh`. Local operation also works without this step.
+4. Run `./hq start`. Choose a generic template or build an app. Answer the interview, review the preview, then approve writing its versioned definition.
+5. Install and enable the app. Add a record. Restart the dashboard and verify that the record remains.
+6. Start `./hq worker` in a second terminal for schedules. A daily digest writes results to persistent memory and activity. Closing the worker stops unattended work.
+7. For an AI coordinator, run `./hq hermes-plan`, install/configure Hermes through official instructions, then use `./hq chat`. Review bundled skills before trusting them. Other agents start with `AGENTS.md` and `./hq handoff`.
 
-1. Make an account at https://github.com/signup and enable two-factor authentication.
-2. Open https://github.com/Rla102277/InfiniteArchOpenClaw (the owner must grant access; private forking may be restricted).
-3. Select **Fork** → create a copy under **your own account**. Verify YOUR username is in the URL.
-4. Install/sign into **GitHub Desktop** from https://desktop.github.com.
-5. On your new fork click **Code → Open with GitHub Desktop → Clone**.
-6. In GitHub Desktop choose **Repository → Open in Terminal**.
-7. Run exactly:
+Reusable definitions live in Git. App records, private notes, memory and job history stay in `~/PersonalAIHQ` by default. App specifications enter Git only after your approval; avoid private information in them. No dashboard approval automatically merges code or deploys software.
 
-```bash
-./bootstrap.sh
-```
+External agent tasks require both approval of the exact request and an explicitly enabled local worker: `./hq worker --once --allow-external`. Installed tools retain their own permissions. Built-in tasks work without any model connection.
 
-The installer checks for Apple Command Line Tools and Homebrew, offers the Git/Python/GitHub CLI/Codex tools, points to the official Hermes Desktop installer, seeds a local private workspace, checks and tests HQ, and offers login/trust steps. If you must finish a Mac/website installation, rerun the same bootstrap command.
-
-When tools and GitHub authentication are ready, the installer confirms the GitHub repository belongs to YOU and is a fork. Type **PUSH** to authorize the first onboarding commit to **your fork only**. On a failed push, retry `./scripts/first-push.sh` — no duplicate commit.
-
-Start the web HQ with `./hq start`, create a project, then run `./hq chat` in another Terminal window (or use the project-specific command shown in HQ). Tell Hermes: *“I'm not technical. Grill me with one question at a time, write the first plan, and wait for my approval before coding.”*
-
-Your browser HQ is at http://127.0.0.1:8731. Its approvals do not merge code or deploy apps. Mac mini service install, web-embedded agent execution and automatic full-app coding are not part of this version.
-
-**More details:** [docs/FORK_START.md](docs/FORK_START.md).
+See [fork setup](docs/FORK_START.md), [runtime examples](docs/RUNTIME.md), [capability limits](docs/CAPABILITIES.md) and [Mac mini setup](docs/MAC_MINI.md).

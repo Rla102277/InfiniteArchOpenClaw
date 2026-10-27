@@ -1,9 +1,12 @@
 """Idempotently seed a user's local, private HQ workspace (no network)."""
 from __future__ import annotations
 import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from aihq.storage import private_home, private_path
 HOME = Path(os.environ.get("AIHQ_HOME", str(Path.home() / "PersonalAIHQ"))).expanduser()
 if not HOME.is_absolute():
     raise SystemExit("AIHQ_HOME must be an absolute path")
@@ -20,9 +23,14 @@ FILES = {
 }
 
 def seed(home: Path = HOME) -> tuple[int, int]:
+    home = private_home(home)
+    for name in FILES:
+        private_path(home, name)
+    home.mkdir(parents=True, exist_ok=True, mode=0o700)
+    home.chmod(0o700)
     created = skipped = 0
     for name, data in FILES.items():
-        path = home / name
+        path = private_path(home, name)
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
             skipped += 1

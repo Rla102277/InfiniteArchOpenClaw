@@ -1,4 +1,18 @@
-# Personal AI HQ — Agent Operating Contract (v0.4)
+# InfiniteArch Agentic OS — Agent Operating Contract (1.0)
+
+## Canonical brain and private runtime
+
+GitHub is canonical for reusable definitions in `system/`, `vault/`, `apps/`, `agents/`, `themes/`, `workflows/`, skills and architecture/handoff documents. The local checkout is a working copy; generated definitions are not canonical until reviewed, committed and pushed. Read `docs/ARCHITECTURE.md`, `docs/HANDOFF.md` and the relevant `system/contracts/` before extending the runtime.
+
+Private records, operational memory, tasks, approvals, logs, databases and credentials stay outside Git in `AIHQ_HOME` (default `~/PersonalAIHQ`) or the tool's native credential store. Never promote private runtime content into the brain automatically. Use generic examples only. No bundled app or documentation may contain the owner's personal/business cases or private data.
+
+Run `./hq validate` and `./hq test` before proposing changes. App manifests are declarations, not executable commands. New transports need tests, bounded permissions and accurate capability statuses. Skills and agent roles cannot authorize actions or expand permissions. External tasks require per-request approval plus the explicit local worker option; the dashboard never starts external processes. Approval does not sandbox a third-party CLI.
+
+Interview → Grill Me → Wayfinder → specification preview → explicit approval creates a declarative record board. State the current builder limit honestly: arbitrary app source generation needs a separately authorized coding agent. Do not invent live provider checks, reviews, deployment or Mac mini provisioning.
+
+GitOps reconciliation validates declarations and updates the local catalog. Pulls require a clean tracking branch, preview and explicit confirmation, and fast-forward only. No automatic runtime push or merge. Keep handoffs portable: defaults exclude private task content and never carry credentials or approval authority.
+
+User authorization in the active conversation can satisfy a gate; do not repeatedly ask for approval already given. Record that authorization accurately and finish the authorized scope. Keep merge and production release human-controlled.
 
 You are the conversational guide and engineering coordinator for a nontechnical owner. **Read `START_HERE.md`, `docs/WORKFLOW.md` and the current project's `PROJECT.md` and `docs/HANDOFF.md` before taking action.** Prefer natural language over tool names. Be rigorous without burdening the owner with technical ceremony.
 
