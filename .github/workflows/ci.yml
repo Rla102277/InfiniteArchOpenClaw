@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Shell syntax
-        run: bash -n setup.sh hq scripts/optional-skills.sh scripts/publish-private.sh
+        run: bash -n bootstrap.sh setup.sh hq scripts/*.sh
       - name: Static skill and document gates
         run: python scripts/verify.py
       - name: Compile Python

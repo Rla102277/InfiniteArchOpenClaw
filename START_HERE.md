@@ -1,35 +1,25 @@
-# Start Here — One-command Mac installation
+# Start Here — Personal AI HQ v0.4
 
-This repo packages the HQ web dashboard, the first-party engineering skills,
-workflow policies, tests, and a local workspace seeder. It installs external
-CLI tools when you approve, using official installers. Providers still need
-individual logins. No API secrets or external skills are bundled.
+**No coding experience required.** This guide is for someone starting on their own Mac.
 
-**On a Mac:** open Terminal, clone this repository (or extract the ZIP), `cd`
-into it, then run:
+1. Make an account at https://github.com/signup and enable two-factor authentication.
+2. Open https://github.com/Rla102277/InfiniteArchOpenClaw (the owner must grant access; private forking may be restricted).
+3. Select **Fork** → create a copy under **your own account**. Verify YOUR username is in the URL.
+4. Install/sign into **GitHub Desktop** from https://desktop.github.com.
+5. On your new fork click **Code → Open with GitHub Desktop → Clone**.
+6. In GitHub Desktop choose **Repository → Open in Terminal**.
+7. Run exactly:
 
 ```bash
 ./bootstrap.sh
 ```
 
-The bootstrap checks Apple's developer tools and Homebrew, offers to install
-Git/Python/GitHub CLI/Codex, points you to the signed Hermes Desktop installer,
-seeds `~/PersonalAIHQ/`, offers authentication and local skill trust, initializes
-Git, and runs the tests. It is safe to rerun and never overwrites your local
-workspace files. MacOS dialogs and provider sign-in may require intervention.
+The installer checks for Apple Command Line Tools and Homebrew, offers the Git/Python/GitHub CLI/Codex tools, points to the official Hermes Desktop installer, seeds a local private workspace, checks and tests HQ, and offers login/trust steps. If you must finish a Mac/website installation, rerun the same bootstrap command.
 
-```bash
-./hq start          # browser-based local project dashboard
-./hq chat           # Hermes conversation with repository rules
-./scripts/publish-private.sh my-ai-hq  # OPTIONAL: push to a NEW private GitHub repo
-```
+When tools and GitHub authentication are ready, the installer confirms the GitHub repository belongs to YOU and is a fork. Type **PUSH** to authorize the first onboarding commit to **your fork only**. On a failed push, retry `./scripts/first-push.sh` — no duplicate commit.
 
-**Security:** Read files and scripts before trusting or running them. This
-bootstrap does not install unreviewed external skills or silently run
-remote shell scripts. The bundled skills are original starter workflows,
-not copies of Pocock/Osmani/pstack. Third-party integrations are optional.
+Start the web HQ with `./hq start`, create a project, then run `./hq chat` in another Terminal window (or use the project-specific command shown in HQ). Tell Hermes: *“I'm not technical. Grill me with one question at a time, write the first plan, and wait for my approval before coding.”*
 
-**What is real in v0.2:** local dashboard, project records, approval recording,
-Mac tooling bootstrap, workspace seeding, Hermes CLI handoff, CI tests.
-**Not yet automatic:** embedded chat UI with live Hermes/Codex jobs, unattended
-full app builds from the dashboard, cloud deployment, and Mac mini service setup.
+Your browser HQ is at http://127.0.0.1:8731. Its approvals do not merge code or deploy apps. Mac mini service install, web-embedded agent execution and automatic full-app coding are not part of this version.
+
+**More details:** [docs/FORK_START.md](docs/FORK_START.md).

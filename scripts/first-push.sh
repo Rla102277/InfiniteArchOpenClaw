@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create an auditable first commit and push ONLY to the authenticated user's fork.
+# First onboarding commit/push ONLY to the authenticated owner\x27s fork. Retry safe.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -34,33 +34,48 @@ if [[ -n "$(git status --porcelain --untracked-files=normal)" ]]; then
  git status --short
  exit 4
 fi
-if [[ -f onboarding/FIRST_BOOTSTRAP.md ]]; then
- echo 'First bootstrap commit already exists; skipping.'
- exit 0
-fi
-mkdir -p onboarding
-cat > onboarding/FIRST_BOOTSTRAP.md <<'MARKER'
+marker='onboarding/FIRST_BOOTSTRAP.md'
+existing_marker=0
+if [[ -e "$marker" ]]; then
+ existing_marker=1
+ git cat-file -e "HEAD:$marker" 2>/dev/null || { echo 'Uncommitted onboarding marker; inspect it first.' >&2; exit 4; }
+else
+ mkdir -p onboarding
+ cat > "$marker" <<'MARKER'
 # First local bootstrap
 
 The owner completed the initial local onboarding and approved the first push.
 This file intentionally contains no machine identifier, credentials, or private workspace details.
 Project discovery and development decisions will be recorded separately.
 MARKER
+fi
 printf '\nReady to push the first onboarding commit to %s (branch %s).\n' "$repo" "$branch"
+remote_sha="$(git ls-remote origin "refs/heads/$branch" | awk '{print $1}')" || { echo 'Cannot reach your fork. Retry after checking your connection.' >&2; exit 4; }
+if [[ "$existing_marker" == 1 && -n "$remote_sha" && "$remote_sha" == "$(git rev-parse HEAD)" ]]; then
+ echo "Already pushed successfully: https://github.com/$repo/tree/$branch"
+ exit 0
+fi
 printf 'Type PUSH to authorize: '
 IFS= read -r answer || true
 if [[ "$answer" != PUSH ]]; then
  echo 'Canceled. No commit or push performed.'
- rm -f onboarding/FIRST_BOOTSTRAP.md
- rmdir onboarding 2>/dev/null || true
+ if [[ "$existing_marker" == 0 ]]; then
+  rm -f "$marker"
+  rmdir onboarding 2>/dev/null || true
+ fi
  exit 1
 fi
-if ! git config user.name >/dev/null 2>&1; then git config user.name "$login"; fi
-if ! git config user.email >/dev/null 2>&1; then
- id="$(gh api user --jq '.id')"
- git config user.email "${id}+${login}@users.noreply.github.com"
+if [[ "$existing_marker" == 0 ]]; then
+ if ! git config user.name >/dev/null 2>&1; then git config user.name "$login"; fi
+ if ! git config user.email >/dev/null 2>&1; then
+  id="$(gh api user --jq '.id')"
+  git config user.email "${id}+${login}@users.noreply.github.com"
+ fi
+ git add -- "$marker"
+ git commit -m 'Initialize my Personal AI HQ workspace'
 fi
-git add -- onboarding/FIRST_BOOTSTRAP.md
-git commit -m 'Initialize my Personal AI HQ workspace'
-git push origin "HEAD:refs/heads/$branch"
+if ! git push origin "HEAD:refs/heads/$branch"; then
+ echo 'Push failed; commit is saved locally. Rerun ./scripts/first-push.sh to retry without a duplicate commit.' >&2
+ exit 5
+fi
 printf '\nFirst commit pushed successfully: https://github.com/%s/tree/%s\n' "$repo" "$branch"

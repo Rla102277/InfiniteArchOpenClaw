@@ -1,57 +1,34 @@
-# Personal AI HQ Bootstrap v0.2
+# Personal AI HQ Bootstrap v0.4 — Fork → Clone → Bootstrap → First Push
 
-A repeatable Mac starter to seed a local Personal AI HQ and begin a
-conversation-driven engineering project. Start with [START_HERE.md](START_HERE.md).
+A Mac-first AI engineering starter with a local project dashboard, ten bundled first-party engineering skills, guided tool installation, a private workspace seeder, and a safe initial push to your own GitHub fork.
 
-## One command after cloning
+**Start here: [START_HERE.md](START_HERE.md).** Detailed beginner walkthrough: [docs/FORK_START.md](docs/FORK_START.md).
+
+## First-time setup
+
+1. Create a GitHub account and get access to this private InfiniteArch repository.
+2. Click **Fork** to create your own copy, then **Clone your fork** with GitHub Desktop (do not Download ZIP).
+3. In GitHub Desktop choose **Repository → Open in Terminal**.
+4. Run:
 
 ```bash
 ./bootstrap.sh
 ```
 
-It checks Mac prerequisites, offers tool installation and sign-in, seeds
-`~/PersonalAIHQ`, verifies the starter, and tells you how to launch.
+The bootstrap may stop to request installation of Apple Command Line Tools, Homebrew, or Hermes Desktop. Follow the official prompts, then **rerun the same command**. It safely preserves existing workspace files.
 
-Use `./bootstrap.sh --check` to view available tools without installing anything.
-Use `./bootstrap.sh --launch` to also start the local dashboard after setup.
+When GitHub authentication, Codex, and Hermes are ready, the bootstrap checks that the remote belongs to your GitHub account and GitHub confirms it is a fork. Type **PUSH** to approve a generic first commit to your fork. If the network push fails, rerun `./scripts/first-push.sh` — it reuses the saved commit.
 
-The local HQ app, first-party skills, CI, and review policy are in this repo.
-External provider binaries and third-party skills are **not** redistributed;
-setup installs or guides official installs with explicit approval.
-
-## Publish as a template
-
-When authenticated to GitHub, run:
+## Using your HQ
 
 ```bash
-./scripts/publish-private.sh personal-ai-hq
+./hq start      # Local browser dashboard: http://127.0.0.1:8731
+./hq chat       # Start a guided Hermes conversation
+./hq test       # Run built-in tests
 ```
 
-This creates a new private repo and pushes this code after confirmation.
-For a reusable GitHub template, enable Template repository under repo settings.
-Personal runtime data remains under `~/PersonalAIHQ` and is not pushed by default.
+Seeded private local workspace: `~/PersonalAIHQ`. Repo-local project files: `projects/` (never put secrets there). Bundled skills: grill-me, wayfinder, specify, architect, build-slice, verify, review, release, reflect and hq-router. External Pocock/Osmani/pstack skills are not installed automatically.
 
-## Limits
+**Currently functional:** bootstrap, local dashboard, project and review records, skills/instructions, local tests, fork validation and first Git push. **Not yet functional:** autonomous agent orchestration inside the browser, Mac mini production deployment, unattended creation of full applications. Hermes, Codex and model/provider access are separate.
 
-This release scaffolds the environment and supports CLI conversations, not yet
-one-click autonomous engineering from the dashboard. Verify tool/provider
-compatibility on a real Mac before using it with other people.
-
-## Preferred friend workflow: Fork → Clone → Bootstrap → First push
-
-See [docs/FORK_START.md](docs/FORK_START.md). Once they fork this repository
-into their account and clone **their own fork** to the Mac, `./bootstrap.sh`
-seeds their private `~/PersonalAIHQ` data and invokes `scripts/first-push.sh`.
-It checks GitHub login, verifies that `origin` belongs to the signed-in account
-and is actually a fork, then asks the person to type `PUSH` before creating
-and pushing one generic initial onboarding commit. No secrets or personal
-knowledge are uploaded. A cloned fork is required; a downloaded ZIP is not enough.
-
-## Publishing to InfiniteArch (repository owner)
-
-`./scripts/publish-infinitearch.sh` authenticates to GitHub as `Rla102277`,
-clones `Rla102277/InfiniteArchOpenClaw`, copies the starter, generates a ZIP in
-`releases/`, shows the files, and waits for `PUBLISH` before pushing. It refuses
-when starter files already exist upstream, to avoid overwriting prior work.
-Then friends fork the upstream repository, clone **their fork**, run
-`./bootstrap.sh`, and confirm the first fork push.
+The ZIP under `releases/` is the older v0.3 snapshot. **Fork and clone the current main branch for v0.4 source.**
