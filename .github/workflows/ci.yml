@@ -1,0 +1,26 @@
+name: HQ CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Shell syntax
+        run: bash -n setup.sh hq scripts/optional-skills.sh scripts/publish-private.sh
+      - name: Static skill and document gates
+        run: python scripts/verify.py
+      - name: Compile Python
+        run: python -m compileall -q aihq
+      - name: Standard-library unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Basic secret file check
+        run: |
+          test ! -f .env
+          test ! -f .hermes/config.yaml

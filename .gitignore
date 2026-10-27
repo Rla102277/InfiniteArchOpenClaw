@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+.env.*
+!.env.example
+.local/
+.hermes/config.yaml
+.hermes/.env
+*.log
+*.bak
+*.sqlite3

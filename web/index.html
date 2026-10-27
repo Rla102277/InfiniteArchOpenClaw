@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal AI HQ</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand"><div class="mark">◈</div><div><strong>PERSONAL HQ</strong><span>Agentic workspace</span></div></div>
+  <div class="section-label">YOUR WORKSPACE</div>
+  <nav><a class="active" href="#overview">▦ &nbsp; Overview</a><a href="#projects">◫ &nbsp; Projects</a><a href="#activity">≋ &nbsp; Activity</a><a href="#approvals">◎ &nbsp; Approvals</a><a href="#skills">◇ &nbsp; Skills</a></nav>
+  <div class="sidebar-foot"><span class="status-dot"></span> Local-only server<br><small>Prototype 0.1 · No remote exposure</small></div>
+</aside>
+<main>
+  <header><div><span class="eyebrow">YOUR PERSONAL AGENTIC OPERATING SYSTEM</span><h1>Good to see you.</h1><p>Turn ideas into working projects, one verified step at a time.</p></div><div class="header-actions"><button id="refresh" class="secondary">Refresh</button><button id="new-project" class="primary">+ New project</button></div></header>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <section class="hero" id="overview"><div><span class="eyebrow">START HERE</span><h2>What would you like to build?</h2><p>Describe the idea. Your engineering agent will help you shape it through questions, specifications, and small, tested changes.</p><button id="hero-create" class="primary">Start a project →</button></div><div class="hero-mark">✳</div></section>
+  <section class="stats"><div><span>PROJECTS</span><strong id="stat-projects">0</strong><small>In your workspace</small></div><div><span>AWAITING REVIEW</span><strong id="stat-approvals">0</strong><small>Owner decisions</small></div><div><span>BUILT-IN SKILLS</span><strong id="stat-skills">0</strong><small>Version-controlled</small></div><div><span>CODING AGENTS</span><strong id="stat-agents">0/2</strong><small>Detected on this machine</small></div></section>
+  <div class="columns">
+    <section id="projects" class="panel"><div class="panel-head"><div><h2>Projects</h2><p>Your ideas, specifications and milestones</p></div><button id="add-project" class="ghost">+ Add</button></div><div id="project-list" class="stack"></div></section>
+    <section id="approvals" class="panel"><div class="panel-head"><div><h2>Needs your attention</h2><p>Nothing ships without review</p></div></div><div id="approval-list" class="stack"></div></section>
+  </div>
+  <div class="columns">
+    <section id="activity" class="panel"><div class="panel-head"><div><h2>Activity</h2><p>Actual recorded project events</p></div></div><div id="activity-list" class="stack"></div></section>
+    <section id="skills" class="panel"><div class="panel-head"><div><h2>Your system</h2><p>Skills and connected engineering tools</p></div></div><div id="tool-list" class="stack"></div><div class="skill-label">BUNDLED WORKFLOWS</div><div id="skill-list" class="chips"></div></section>
+  </div>
+  <footer>Personal AI HQ · All project files remain in your local repository. Git pushes and deployment require separate approval.</footer>
+</main>
+</div>
+<dialog id="project-dialog"><form id="project-form" class="modal"><h2>Start a project</h2><p>Describe your idea in everyday language. You don't need a technical plan.</p><label>Project name<input name="name" maxlength="100" required placeholder="e.g. My Personal Research Assistant"></label><label>What's the idea?<textarea name="idea" maxlength="10000" required rows="5" placeholder="I want an assistant that…"></textarea></label><div class="buttons"><button type="button" class="secondary cancel">Cancel</button><button type="submit" class="primary">Create project</button></div></form></dialog>
+<dialog id="feature-dialog"><form id="feature-form" class="modal"><h2>Request a feature</h2><p>Describe what you want to change. This creates a request—not unapproved code.</p><input type="hidden" name="project"><label>Feature title<input name="title" maxlength="120" required placeholder="e.g. Daily email summary"></label><label>What should it do?<textarea name="description" maxlength="10000" rows="5" required></textarea></label><div class="buttons"><button type="button" class="secondary cancel">Cancel</button><button type="submit" class="primary">Save request</button></div></form></dialog>
+</body>
+</html>
