@@ -27,6 +27,8 @@ When GitHub authentication, Codex, and Hermes are ready, the bootstrap checks th
 ./hq test       # Run built-in tests
 ```
 
+The Infinite Arch headquarters is a second interface at http://127.0.0.1:8731/command. It reads local projects, skills, adapter availability, tasks, schedules, runs, and approvals. Set `HQ_COMMAND_CENTER=0` before `./hq start` to hide that interface. See [docs/HQ_COMMAND_CENTER.md](docs/HQ_COMMAND_CENTER.md).
+
 Seeded private local workspace: `~/PersonalAIHQ`. Repo-local project files: `projects/` (never put secrets there). Bundled skills: grill-me, wayfinder, specify, architect, build-slice, verify, review, release, reflect and hq-router. External Pocock/Osmani/pstack skills are not installed automatically.
 
 **Currently functional:** bootstrap, local dashboard, project and review records, skills/instructions, local tests, fork validation and first Git push. **Not yet functional:** autonomous agent orchestration inside the browser, Mac mini production deployment, unattended creation of full applications. Hermes, Codex and model/provider access are separate.

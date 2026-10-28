@@ -1,0 +1,9 @@
+{
+  "id": "local-clerk",
+  "name": "Local clerk",
+  "purpose": "Keep local task, schedule, and approval records on this machine without calling a model.",
+  "adapter": "local-hq",
+  "locality": "local",
+  "network": "local",
+  "status": "defined"
+}

@@ -12,6 +12,8 @@ Real Hermes conversation panel via authenticated local backend, task orchestrati
 
 Knowledge vault, searchable memory, reminders, schedules, connectors, approval queue for tool actions, event stream and notifications. Single-user private access only.
 
+The optional Infinite Arch headquarters shell now reads local status, tasks, schedules, runs, and approvals, and can save a proposed agent definition for Git review. It does not launch adapters from the browser.
+
 ## v0.4 — Mac mini portability
 
 Signed bootstrap/release workflow, backup/restore, `launchd` services, private remote access, monitoring and real device recovery drill.

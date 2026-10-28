@@ -20,6 +20,10 @@ HQ `Accept demo` means only that the owner accepted a recorded demonstration. It
 
 Project ideas, features, decisions, review requests, and activity logs are written to `projects/`, which is meant to be version-controlled. These may contain sensitive business information: use **private** GitHub repositories where appropriate. Do not place personal secrets or regulated records in project files. Be aware that configured external AI model providers may process submitted prompts/code.
 
+## Headquarters shell
+
+The command center at `/command` uses the same loopback host check, origin check, and per-process token for writes. Chat text is stored locally and is not turned into a shell command. Local-only mode refuses provider-dependent and cloud adapters. Missing adapters are reported offline. Demo mode serves labeled fixtures and rejects record changes. `HQ_COMMAND_CENTER=0` hides the interface assets. Approval of an external action records the decision and does not send it.
+
 ## Production hardening still required
 
 Authenticated remote UI, device pairing, encryption/secret management, network authorization, job isolation, audit retention, resource budgets, backups and disaster recovery, signed release artifacts and rollback testing are NOT part of the initial local preview.
