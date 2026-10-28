@@ -1,0 +1,187 @@
+{
+  "banner": "Demo mode. Every figure on screen is a synthetic fixture, not activity from this machine.",
+  "workspaces": [
+    {
+      "id": "sample",
+      "name": "Sample workspace",
+      "kind": "fixture",
+      "summary": "A synthetic workspace used only for demonstration.",
+      "created_at": "2020-01-01T00:00:00+00:00"
+    }
+  ],
+  "applications": [
+    {
+      "id": "sample-desk",
+      "name": "Sample desk",
+      "summary": "A generic fixture application with no account and no private data.",
+      "kind": "fixture"
+    }
+  ],
+  "agents": [
+    {
+      "id": "sample-clerk",
+      "name": "Sample clerk",
+      "purpose": "Fixture agent that shows an available local definition.",
+      "adapter": "sample-local",
+      "locality": "local",
+      "network": "local",
+      "origin": "fixture",
+      "definition_status": "fixture",
+      "runtime_status": "available",
+      "checked_at": "2020-01-01T00:00:00+00:00",
+      "running_since": null,
+      "last_error": null,
+      "adapter_status": "available"
+    },
+    {
+      "id": "sample-running",
+      "name": "Sample running agent",
+      "purpose": "Fixture agent that shows a running state and an older error.",
+      "adapter": "sample-local",
+      "locality": "local",
+      "network": "local",
+      "origin": "fixture",
+      "definition_status": "fixture",
+      "runtime_status": "running",
+      "checked_at": "2020-01-01T00:05:00+00:00",
+      "running_since": "2020-01-01T00:05:00+00:00",
+      "last_error": {
+        "message": "Sample check could not reach its fixture endpoint.",
+        "at": "2020-01-01T00:04:00+00:00",
+        "run_id": "n-demo0002"
+      },
+      "adapter_status": "available"
+    },
+    {
+      "id": "sample-offline",
+      "name": "Sample offline agent",
+      "purpose": "Fixture agent that shows an offline adapter without a heartbeat.",
+      "adapter": "sample-remote",
+      "locality": "cloud",
+      "network": "cloud",
+      "origin": "fixture",
+      "definition_status": "fixture",
+      "runtime_status": "offline",
+      "checked_at": "2020-01-01T00:00:00+00:00",
+      "running_since": null,
+      "last_error": {
+        "message": "Sample remote adapter is offline. No heartbeat was recorded.",
+        "at": "2020-01-01T00:00:00+00:00",
+        "run_id": null
+      },
+      "adapter_status": "offline"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t-demo0001",
+      "workspace_id": "sample",
+      "title": "Sample task",
+      "detail": "Synthetic work item for the demonstration layout.",
+      "status": "open",
+      "created_at": "2020-01-01T00:00:00+00:00",
+      "updated_at": "2020-01-01T00:00:00+00:00"
+    }
+  ],
+  "schedules": [
+    {
+      "id": "s-demo0001",
+      "workspace_id": "sample",
+      "task_id": "t-demo0001",
+      "name": "Sample hourly check",
+      "kind": "adapter-status",
+      "cadence_seconds": 3600,
+      "enabled": 1,
+      "approval_id": null,
+      "created_at": "2020-01-01T00:00:00+00:00",
+      "updated_at": "2020-01-01T00:00:00+00:00",
+      "next_run_at": "2020-01-01T01:00:00+00:00",
+      "last_run_at": "2020-01-01T00:00:00+00:00"
+    }
+  ],
+  "runs": [
+    {
+      "id": "n-demo0001",
+      "workspace_id": "sample",
+      "schedule_id": "s-demo0001",
+      "agent_id": null,
+      "kind": "adapter-status",
+      "status": "completed",
+      "outcome": "Sample check completed inside the fixture set.",
+      "error": null,
+      "started_at": "2020-01-01T00:00:00+00:00",
+      "finished_at": "2020-01-01T00:00:02+00:00"
+    },
+    {
+      "id": "n-demo0002",
+      "workspace_id": "sample",
+      "schedule_id": null,
+      "agent_id": "sample-running",
+      "kind": "fixture",
+      "status": "error",
+      "outcome": "Sample run recorded an error.",
+      "error": "Sample check could not reach its fixture endpoint.",
+      "started_at": "2020-01-01T00:03:00+00:00",
+      "finished_at": "2020-01-01T00:04:00+00:00"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "a-demo0001",
+      "workspace_id": "sample",
+      "source": "fixture",
+      "subject_type": "schedule",
+      "subject_id": "s-demo0001",
+      "title": "Sample external action",
+      "detail": "Synthetic approval. Nothing is sent.",
+      "status": "pending",
+      "requested_at": "2020-01-01T00:00:00+00:00",
+      "decided_at": null
+    }
+  ],
+  "events": [
+    {
+      "id": "e-demo0001",
+      "workspace_id": "sample",
+      "kind": "fixture",
+      "message": "Sample event recorded for the demonstration feed.",
+      "provenance": "demo",
+      "created_at": "2020-01-01T00:00:00+00:00",
+      "ref_id": "s-demo0001"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "sample-note",
+      "name": "Sample note",
+      "summary": "A synthetic document title. It is not a repository file.",
+      "kind": "fixture"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "sample-local",
+      "label": "Sample local adapter",
+      "locality": "local",
+      "network": "local",
+      "role": "navigation",
+      "available": true,
+      "status": "available",
+      "detail": "Fixture adapter. This is not a live probe.",
+      "probe": "fixture",
+      "checked_at": "2020-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "sample-remote",
+      "label": "Sample remote adapter",
+      "locality": "cloud",
+      "network": "cloud",
+      "role": "conversation",
+      "available": false,
+      "status": "offline",
+      "detail": "Fixture offline adapter. No heartbeat was recorded.",
+      "probe": "fixture",
+      "checked_at": "2020-01-01T00:00:00+00:00"
+    }
+  ]
+}

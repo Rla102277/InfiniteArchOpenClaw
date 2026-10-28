@@ -1,0 +1,64 @@
+/* Theme tokens for the Infinite Arch headquarters shell. Fonts are local system fonts. */
+
+:root,
+[data-theme="hud"] {
+  color-scheme: dark;
+  --bg: #05080c;
+  --bg-2: #0b1722;
+  --panel: #0b1520;
+  --fg: #e8f4fa;
+  --muted: #c5d5e0;
+  --cyan: #7ee7ff;
+  --amber: #ffd27a;
+  --amber-strong: #ffb02e;
+  --hot: #ffb4a8;
+  --ok: #8ee7c8;
+  --warn: #ffd27a;
+  --bad: #ffb4a8;
+  --line: rgba(126, 231, 255, 0.35);
+  --focus: #ffd27a;
+  --button-fg: #1a1204;
+  --input: #071018;
+  --head: "Avenir Next Condensed", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12171c;
+  --bg-2: #1c242c;
+  --panel: #1c242c;
+  --fg: #eef3f6;
+  --muted: #c9d4dc;
+  --cyan: #8fd4ef;
+  --amber: #ffd27a;
+  --amber-strong: #ffd27a;
+  --hot: #ffb4a8;
+  --ok: #9be7c8;
+  --warn: #ffd27a;
+  --bad: #ffb4a8;
+  --line: rgba(201, 212, 220, 0.35);
+  --focus: #8fd4ef;
+  --button-fg: #102028;
+  --input: #0e1419;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f9fb;
+  --bg-2: #e7eef3;
+  --panel: #ffffff;
+  --fg: #102028;
+  --muted: #3d5160;
+  --cyan: #0a5f78;
+  --amber: #7a3d00;
+  --amber-strong: #7a3d00;
+  --hot: #8d2f22;
+  --ok: #0d6b45;
+  --warn: #7a3d00;
+  --bad: #8d2f22;
+  --line: rgba(16, 32, 40, 0.28);
+  --focus: #0a5f78;
+  --button-fg: #f7f9fb;
+  --input: #ffffff;
+}

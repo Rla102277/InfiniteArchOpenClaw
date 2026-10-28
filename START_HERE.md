@@ -20,6 +20,6 @@ When tools and GitHub authentication are ready, the installer confirms the GitHu
 
 Start the web HQ with `./hq start`, create a project, then run `./hq chat` in another Terminal window (or use the project-specific command shown in HQ). Tell Hermes: *“I'm not technical. Grill me with one question at a time, write the first plan, and wait for my approval before coding.”*
 
-Your browser HQ is at http://127.0.0.1:8731. Its approvals do not merge code or deploy apps. Mac mini service install, web-embedded agent execution and automatic full-app coding are not part of this version.
+Your browser HQ is at http://127.0.0.1:8731. The Infinite Arch headquarters, a selectable interface for local status, tasks, schedules, and approvals, is at http://127.0.0.1:8731/command. Its approvals do not merge code or deploy apps. Mac mini service install, web-embedded agent execution and automatic full-app coding are not part of this version.
 
 **More details:** [docs/FORK_START.md](docs/FORK_START.md).
