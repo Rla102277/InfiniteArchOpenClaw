@@ -32,6 +32,6 @@ IFS= read -r ans || true
 [[ "$ans" == PUBLISH ]] || { echo 'Canceled; no changes published.'; exit 1; }
 git add -A -- . ':!*.env' ':!.env.*'
 git diff --cached --quiet && { echo 'Nothing to publish.'; exit 0; }
-git commit -m 'Publish Personal AI HQ fork-first bootstrap v0.3'
+git commit -m 'Publish Personal AI HQ starter'
 git push -u origin HEAD:main
 printf '\nPublished: https://github.com/%s\n' "$remote"

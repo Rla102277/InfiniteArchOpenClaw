@@ -18,7 +18,7 @@ HQ `Accept demo` means only that the owner accepted a recorded demonstration. It
 
 ## Data policy
 
-Project ideas, features, decisions, review requests, and activity logs are written to `projects/`, which is meant to be version-controlled. These may contain sensitive business information: use **private** GitHub repositories where appropriate. Do not place personal secrets or regulated records in project files. Be aware that configured external AI model providers may process submitted prompts/code.
+Project ideas, features, decisions, review requests, and activity logs are written to `projects/`, which is meant to be version-controlled. These may contain sensitive business information: use a **private** GitHub repository created with Use this template. `scripts/first-push.sh` refuses to push to a public repository, a fork, or the template itself. Do not place personal secrets or regulated records in project files. Be aware that configured external AI model providers may process submitted prompts/code.
 
 ## Headquarters shell
 

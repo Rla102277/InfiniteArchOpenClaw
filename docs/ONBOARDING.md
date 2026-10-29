@@ -2,9 +2,9 @@
 
 ## Before starting
 
-You need a Mac with an administrator account, internet for initial tool downloads, a GitHub account, and access to a supported Hermes model/provider. Code-generation subscriptions or API usage can cost money. An existing GitHub repository can be private.
+You need a Mac with an administrator account, internet for initial tool downloads, a GitHub account, and access to a supported Hermes model/provider. Code-generation subscriptions or API usage can cost money. Your repository must be private; the first-push step refuses public repositories and forks.
 
-1. Extract the starter ZIP or clone the repo into a directory you control. Don't execute shell scripts from unknown repositories.
+1. Create your own **private** repository with **Use this template** (see [TEMPLATE_START.md](TEMPLATE_START.md)) and clone it into a directory you control. Don't execute shell scripts from unknown repositories.
 2. Open Terminal. Enter the folder using `cd ` followed by dragging the folder into Terminal, then press Return.
 3. Run `./setup.sh`. It checks tools and offers optional Homebrew-based installs, never silently executing unknown internet scripts.
 4. If you need Homebrew, install it from https://brew.sh and rerun the setup. If you need Hermes, install the official macOS app from https://hermes-agent.nousresearch.com/docs/getting-started/quickstart. Reopen Terminal afterward.

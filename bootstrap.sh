@@ -55,12 +55,12 @@ fi
 ./hq test
 printf '\nBOOTSTRAP COMPLETE\n'
 printf 'Start dashboard: ./hq start\nStart assistant: ./hq chat\n'
-printf 'First fork commit: ./scripts/first-push.sh (retry safe)\n'
+printf 'First commit: ./scripts/first-push.sh (retry safe)\n'
 printf 'Workspace: %s\n' "${AIHQ_HOME:-$HOME/PersonalAIHQ}"
 if git remote get-url origin >/dev/null 2>&1 && command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1 && command -v hermes >/dev/null 2>&1 && command -v codex >/dev/null 2>&1; then
-  echo 'Next: create the first commit in your OWN GitHub fork.'
+  echo 'Next: create the first commit in your OWN private GitHub repository.'
   ./scripts/first-push.sh
 else
-  echo 'First push postponed: finish Hermes/Codex installs, sign into GitHub, and use your own cloned fork. Rerun ./bootstrap.sh.'
+  echo 'First push postponed: finish Hermes/Codex installs, sign into GitHub, and clone your own private repository made with Use this template. Rerun ./bootstrap.sh.'
 fi
 if [[ "$LAUNCH" == 1 ]]; then exec ./hq start; fi
