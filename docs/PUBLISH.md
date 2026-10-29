@@ -14,6 +14,6 @@ The script previews staged files and requires typing `PUBLISH`. It creates a **p
 
 ## Enable repeatable use by friends
 
-In the GitHub repository's Settings, enable **Template repository**. Then anyone with access can click **Use this template**, name a private project, and clone their new repository. Provide `docs/ONBOARDING.md` as their first link. GitHub access is still subject to the template repository's permissions.
+In the GitHub repository's Settings, enable **Template repository**. Then anyone with access can click **Use this template**, choose **Private**, name the project, and clone their new repository. Never ask friends to Fork: a fork of a public repository is public, and `scripts/first-push.sh` refuses forks and public repositories. Provide `docs/ONBOARDING.md` as their first link. GitHub access is still subject to the template repository's permissions.
 
 If they need the original starter without your projects, publish from a fresh copy instead of a working project directory.
