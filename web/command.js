@@ -37,6 +37,15 @@ async function refresh() {
   } catch (e) {
     dataChip.textContent = 'API offline';
     dataChip.className = 'chip ex';
+    if (!tilesEl.children.length) {
+      const t = el('div', undefined, 'tile st-error');
+      t.style.left = '50%'; t.style.top = '50%';
+      const th = el('div', undefined, 'th');
+      th.append(el('i', undefined, 'dot'), el('b', 'NO DATA'));
+      t.append(th, el('div', 'The local API is not answering. Start the OS with ./hq start, then reload. ' + String(e).slice(0, 120), 'k'));
+      tilesEl.append(t);
+      layout();
+    }
   }
   setTimeout(refresh, 10000);
 }

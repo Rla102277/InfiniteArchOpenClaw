@@ -27,9 +27,9 @@ class Env(unittest.TestCase):
 
 def _message(subject="Call for entry", body="Deadline Dec 15", html=False):
     m = EmailMessage()
-    m["From"], m["To"], m["Subject"], m["Message-ID"] = "Gallery <g@x.org>", "rla1022@gmail.com", subject, "<abc@x>"
+    m["From"], m["To"], m["Subject"], m["Message-ID"] = "Gallery <g@x.org>", "owner@example.com", subject, "<abc@x>"
     if html:
-        m.set_content("<p>Hello <b>Randy</b></p><script>x()</script>", subtype="html")
+        m.set_content("<p>Hello <b>Owner</b></p><script>x()</script>", subtype="html")
     else:
         m.set_content(body)
     return m.as_bytes()
@@ -84,7 +84,7 @@ class FakeSMTP:
 
 class GmailTests(Env):
     def connector(self):
-        g = GmailConnector(self.domain, {"address": "rla1022@gmail.com"})
+        g = GmailConnector(self.domain, {"address": "owner@example.com"})
         g.imap_factory, g.smtp_factory = FakeIMAP, FakeSMTP
         return g
 
@@ -101,9 +101,9 @@ class GmailTests(Env):
         self.assertEqual([m["uid"] for m in found], ["12", "11"])
         self.assertEqual(found[0]["subject"], "Call")
         self.assertIn("Deadline Dec 15", found[0]["snippet"])
-        self.assertEqual(FakeIMAP.instances[-1].logged, ("rla1022@gmail.com", "abcdefghijklmnop"))
+        self.assertEqual(FakeIMAP.instances[-1].logged, ("owner@example.com", "abcdefghijklmnop"))
         read = json.loads(g.call("read", {"uid": "12"}))
-        self.assertIn("Hello Randy", read["body"])
+        self.assertIn("Hello Owner", read["body"])
         self.assertNotIn("x()", read["body"])
         self.assertIn("Draft saved", g.call("draft", {"to": "g@x.org", "subject": "Re: Call", "body": "Yes \u2014 I will enter", "reply_to_uid": "11"}))
         box, flags, data = FakeIMAP.instances[-1].appended[0]

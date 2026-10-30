@@ -86,7 +86,7 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(chat[0]["agent"], "operator")
         self.assertEqual(chat[0]["text"], "What is due this week?")
         self.assertEqual(api.sent()[-1]["text"], "Answer to: What is due this week?")
-        self.assertEqual(tg.config(self.domain)["chat_id"], "111", "the chat is learned from Randy's first message")
+        self.assertEqual(tg.config(self.domain)["chat_id"], "111", "the chat is learned from the owner's first message")
         # the offset survives a restart; the day's thread is reused
         again = FakeAPI([msg(6, 111, "and next week?")])
         second = self.gateway(again)

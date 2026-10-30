@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCAN = ("aihq", "web", "system", "themes", "workflows", "docs", "agents", ".agents")
+PUBLISHED_DOCS = ("README.md", "START_HERE.md", "SYSTEM.md")
 SKIP_SUFFIX = {".pyc", ".png", ".zip", ".icns", ".woff", ".woff2"}
 
 TOKENS = {
@@ -32,6 +33,13 @@ ALLOW = {
     ("aihq/service.py", "curator"): "remaining hits are the config filename context",
     ("aihq/agentapps.py", "curator"): "docstring names the config file always_ask_terms reads",
     ("aihq/connectors.py", "curator"): "same",
+    ("tests/test_basetools.py", "curator"): "fixture builds a curator module app dir",
+    ("tests/test_gitbrain.py", "curator"): "fixture writes a curator.json config file",
+    ("tests/test_bots.py", "darkroom"): "fake connector name in a policy fixture",
+    ("tests/test_connectors.py", "darkroom"): "same",
+    ("SYSTEM.md", "curator"): "the OS-019 row documents the remaining coupling by name",
+    ("SYSTEM.md", "darkroom"): "same",
+    ("README.md", "curator"): "the config filename curator.json is documented, not the app",
     # The secrets backend name is baked into stored Keychain items and CURATOR_* env vars;
     # renaming it would strand existing credentials. Needs a migration decision.
     ("aihq/secrets.py", "curator"): "Keychain service/env prefix in use by stored credentials",
@@ -115,6 +123,33 @@ class GenericCoreTests(unittest.TestCase):
         for page in ("web/index.html", "web/command.html"):
             text = (ROOT / page).read_text(encoding="utf-8")
             self.assertIn("THE INFINITE ARCH", text, page)
+
+    def _violations_in(self, paths):
+        violations = []
+        for path in paths:
+            rel = path.relative_to(ROOT).as_posix()
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            if rel == "tests/test_generic_core.py":
+                continue  # this file's own token patterns and allowlist definitions
+            for line_no, line in enumerate(text.splitlines(), 1):
+                for token, pattern in TOKENS.items():
+                    if pattern.search(line):
+                        if ALLOW.get((rel, token)):
+                            continue
+                        violations.append(f"{rel}:{line_no} [{token}] {line.strip()[:80]}")
+        return violations
+
+    def test_published_docs_and_tests_stay_generic(self):
+        if (ROOT / "curator.json").exists():
+            docs = []  # this checkout's README documents the practice; the published one is generic
+        else:
+            docs = [ROOT / name for name in PUBLISHED_DOCS if (ROOT / name).exists()]
+        paths = docs + sorted((ROOT / "tests").glob("*.py"))
+        violations = [v for v in self._violations_in(paths) if "tests/test_generic_core.py" not in v]
+        self.assertEqual([], violations)
 
     def test_no_literal_home_path_in_core(self):
         home = str(Path.home())

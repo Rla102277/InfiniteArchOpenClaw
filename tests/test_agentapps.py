@@ -93,7 +93,7 @@ class AgentAppTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.domain = Path(self.temporary.name)
         (self.domain / "hq" / "os" / "memory").mkdir(parents=True)
-        (self.domain / "hq" / "os" / "memory" / "overview.md").write_text('---\nkey: "overview"\nupdated: 1\n---\nRandy shoots thresholds.\n', encoding="utf-8")
+        (self.domain / "hq" / "os" / "memory" / "overview.md").write_text('---\nkey: "overview"\nupdated: 1\n---\nThe owner shoots thresholds.\n', encoding="utf-8")
         FakeAgentRun.calls = []
         FakeChats.store = {}
         agentapps.invalidate()
@@ -156,7 +156,7 @@ class AgentAppTests(unittest.TestCase):
         self.assertEqual((saved["agent"], saved["usage"]), ("app:shows", {"input": 120, "output": 40}))
         system = FakeAgentRun.calls[0]["system"]
         self.assertIn(PROMPT, system)
-        self.assertIn("Randy shoots thresholds", system)
+        self.assertIn("The owner shoots thresholds", system)
         self.assertIn("No em dashes", system)
         self.assertIn("write_record", FakeAgentRun.calls[0]["tools"])
         # a second run with the same findings changes nothing and writes no note

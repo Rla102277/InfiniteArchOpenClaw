@@ -19,6 +19,7 @@ EXCLUDE_DIRS = {"apps/curator", "apps/darkroom", ".local", "__pycache__", "runti
                 "secrets", "exports", "logs"}
 EXCLUDE_FILES = {
     "curator.json",
+    "README.md",  # per-repo document; the target keeps its own
     "agents/critic.json", "agents/great-curator.json", "agents/hermes.json",
     "agents/photographer.json", "agents/scholar.json",
     ".agents/skills/critic/SKILL.md", ".agents/skills/curator-router/SKILL.md",

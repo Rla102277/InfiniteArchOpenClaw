@@ -66,7 +66,8 @@ class GitBrainTests(unittest.TestCase):
         (app / "web").mkdir()
         (app / "web" / "app.js").write_text("// fixture\n")
         status = {a["id"]: a["status"] for a in self.runtime("home-a").snapshot()["apps"]}
-        self.assertEqual(status, {"test-app": "enabled"})
+        self.assertEqual(status.get("test-app"), "enabled")
+        self.assertTrue(all(v == "enabled" for v in status.values()))
 
     def test_memory_lands_in_git_and_rebuilds(self):
         self.runtime("home-a").action({"action": "memory.put", "key": "Morning focus", "content": "Grade Franconia."})

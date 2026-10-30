@@ -1109,7 +1109,8 @@ function whoLabel(who) {
     const entry = moduleEntry(value.slice(4));
     return entry ? entry.manifest.name || value.slice(4) : value.slice(4);
   }
-  return value === 'randy' || value === 'owner' ? 'You' : (value || 'OS');
+  const ownerId = snapshot && snapshot.owner && snapshot.owner.id || 'owner';
+  return value === ownerId || value === 'owner' ? 'You' : (value || 'OS');
 }
 
 function activityCard(item) {

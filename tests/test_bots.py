@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from aihq import agentapps
 
-PROMPT = "Find juried photography shows. Record the official url. Put real deadlines on the calendar and text Randy the best two."
+PROMPT = "Find juried photography shows. Record the official url. Put real deadlines on the calendar and text the owner the best two."
 SPEC = {"id": "scout", "name": "Scout", "description": "test bot", "fields": ["title", "deadline", "url"], "key": "url",
         "triggers": [{"type": "schedule", "at": "07:00"}, {"type": "telegram", "command": "/scout"},
                      {"type": "email", "query": "from:submittable newer_than:2d", "every": "30m"}],
@@ -38,7 +38,7 @@ class FakeConnectorTools:
             return json.dumps({"messages": FakeConnectorTools.mail})
         if agentapps.policy_for(self.policy, name) == "ask":
             FakeConnectorTools.inbox.append((name, args))
-            return "QUEUED for Randy's approval: x1"
+            return "QUEUED for the owner's approval: x1"
         return json.dumps({"ok": True, "tool": name})
 
 
@@ -65,7 +65,7 @@ class FakeLLM:
 
 
 class FakeAgentRun:
-    """The loop: makes one record, puts it on the calendar, texts Randy, tries to email (queued)."""
+    """The loop: makes one record, puts it on the calendar, texts the owner, tries to email (queued)."""
     calls = []
 
     @staticmethod
@@ -149,7 +149,7 @@ class BotTests(unittest.TestCase):
         self.assertIn("Connectors: calendar, telegram, gmail", FakeAgentRun.calls[0]["system"])
         self.assertEqual(FakeConnectorTools.inbox, [("gmail.send", {"to": "a@b.c", "subject": "x", "body": "y"})], "only the ask action queued")
         self.assertEqual(result["changes"]["new"], 1)
-        self.assertEqual(FakeGateway.sent, [], "the bot texted Randy itself, so no second message")
+        self.assertEqual(FakeGateway.sent, [], "the bot texted the owner itself, so no second message")
 
     def test_notify_goes_to_telegram_when_the_bot_did_not_message_itself(self):
         class Quiet(FakeAgentRun):
