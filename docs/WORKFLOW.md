@@ -17,7 +17,7 @@ The user never needs to know an agent's skill name. Recognize conversational int
 
 ## Durable artifacts
 
-Every project lives under `projects/<slug>` with `PROJECT.md`, `project.json`, a roadmap, decisions, handoff, feature requests, review requests and an append-only activity log. Source code for a product should live in a bounded project folder or separate repository as complexity grows; keep its own tests and CI.
+Reusable app definitions live in versioned `apps/<slug>/` with a manifest, specification and handoff. Private project notes and legacy feature/review records live under `AIHQ_HOME/projects/<slug>`, outside Git. Operational events and memory live in the private SQLite database. Promote only reviewed, generic lessons into `vault/` through a Git change. Product source can live in a bounded folder or separate repository with its own tests and CI.
 
 ## Agent delegation
 
@@ -29,4 +29,4 @@ Read `PROJECT.md`, `docs/ROADMAP.md`, `docs/DECISIONS.md`, `docs/HANDOFF.md`, cu
 
 ## State and UX limitations
 
-The first dashboard lets people record and accept a demonstration. It does not create branches, check GitHub's CI state, evaluate code, merge PRs, or control external agents. Those are separate verified steps that must be implemented before this can operate autonomously.
+The dashboard runs declarative apps, local tasks, memory, approvals and interval scheduling controls. Interview previews require approval before writing versioned definitions. Built-in work runs through the local worker; external agents additionally require exact-request approval and an explicitly enabled CLI worker. Model/provider setup and external isolation remain separate. The dashboard does not merge PRs, deploy production software or certify CI. See `docs/CAPABILITIES.md` for precise implementation and verification limits.

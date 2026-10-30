@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-The HQ development server binds to `127.0.0.1`, validates host and origin, uses an ephemeral anti-CSRF token for write endpoints, has no process-execution HTTP routes, and does not collect API keys. It is a single-user local preview; other processes running as your macOS user can access local files. Do NOT use port forwarding or publish it publicly.
+The server binds to `127.0.0.1`, validates host/origin and cross-site fetch metadata, uses a per-process anti-CSRF token for writes, and collects no API keys. HTTP routes execute allowlisted local database operations only; even approved external tasks cannot run through a browser worker tick. There is no remote authentication. Other processes running as your user can access the same files and loopback API. Do not forward ports or expose the service publicly.
 
 ## Agents and credentials
 
@@ -14,15 +14,15 @@ The starter bundles ten original plain-text skills. Hermes project skill trust i
 
 ## Human approval
 
-HQ `Accept demo` means only that the owner accepted a recorded demonstration. It does not prove CI passed, authorize financial actions, merge, publish a skill, send communications or deploy code. The owner must independently approve those actions through the relevant tool.
+Legacy demo acceptance records feedback only. Runtime external-task approval authorizes one payload bound to the brain fingerprint, Git revision and executable hash. A separate CLI worker must opt into external execution. It does not prove CI, merge code, publish skills or deploy software. Native provider configuration/hooks can change independently and are not sandboxed by this runtime; review them before approval. Hermes retains native tools/approvals, Codex uses read-only sandbox, Claude disables built-in tools in plan mode, and direct Ollama uses a fixed loopback endpoint. Do not grant external execution to untrusted content merely because it is in Markdown.
 
 ## Data policy
 
-Project ideas, features, decisions, review requests, and activity logs are written to `projects/`, which is meant to be version-controlled. These may contain sensitive business information: use **private** GitHub repositories where appropriate. Do not place personal secrets or regulated records in project files. Be aware that configured external AI model providers may process submitted prompts/code.
+Private app records, tasks, prompts/results, memory, events and legacy project notes live under `AIHQ_HOME` outside the checkout. Directories are owner-only and the SQLite file is mode 0600. Generated app specifications are intentionally written to Git only after explicit builder approval; keep those generic. Credential entry is delegated to each vendor's local configuration/Keychain. Secret-looking filenames are ignored as defense in depth, not as a content scanner. Review every diff before sharing; external providers may process approved prompts/code.
 
-## Headquarters shell
+Reconciliation never executes manifest hooks. Unknown app permissions, workflow operations or theme CSS values fail closed. Changed app definitions require reinstall; removed definitions retain private records. A pending approval becomes stale if the brain/revision/executable changes. External timeouts stop process groups; interrupted work can have an unknown outcome and is not retried automatically.
 
-The command center at `/command` uses the same loopback host check, origin check, and per-process token for writes. Chat text is stored locally and is not turned into a shell command. Local-only mode refuses provider-dependent and cloud adapters. Missing adapters are reported offline. Demo mode serves labeled fixtures and rejects record changes. `HQ_COMMAND_CENTER=0` hides the interface assets. Approval of an external action records the decision and does not send it.
+Bootstrap never executes remote installer scripts, strips quarantine or bypasses macOS security warnings. Use signed official packages and verify publishers. First-push is fork-only with explicit typed approval and remote checks. GitOps pulls require an earlier exact preview and clean fast-forward; Git hooks are disabled for that pull operation. It does not auto-run downloaded runtime code or tests.
 
 ## Production hardening still required
 

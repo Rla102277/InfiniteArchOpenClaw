@@ -1,0 +1,60 @@
+/* Generic agent-app views. Scoped to .module-host so it never leaks into the shell; colors come
+   from the shell's variables only. */
+.module-host .aa-view { display: flex; flex-direction: column; gap: 18px; }
+.module-host .aa-view[hidden] { display: none; }
+.module-host .aa-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+.module-host .aa-heading h1 { font-size: clamp(26px, 2.4vw, 36px); font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.8px; margin: 0 0 4px; }
+.module-host .aa-eyebrow { color: var(--muted); font-size: 9.5px; font-weight: 600; letter-spacing: 1.7px; margin: 0 0 8px; }
+.module-host .aa-muted { color: var(--muted); }
+.module-host .aa-actions { display: flex; gap: 10px; align-items: center; }
+.module-host .aa-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.module-host .aa-kpi { padding: 14px 16px; border: 1px solid color-mix(in srgb, var(--muted) 16%, transparent); border-radius: 9px; background: var(--panel); }
+.module-host .aa-kpi-label { display: block; color: var(--muted); letter-spacing: 1px; font-size: 9px; text-transform: uppercase; }
+.module-host .aa-kpi strong { display: block; font-weight: 400; font-size: 26px; line-height: 1.3; margin-top: 4px; }
+.module-host .aa-toolbar input { max-width: 320px; padding: 9px 12px; border: 1px solid color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 8px; background: var(--background); color: var(--text); font: inherit; }
+.module-host .aa-table-wrap { overflow: auto; border: 1px solid color-mix(in srgb, var(--muted) 16%, transparent); border-radius: 9px; background: var(--panel); }
+.module-host .aa-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.module-host .aa-table th, .module-host .aa-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid color-mix(in srgb, var(--muted) 14%, transparent); vertical-align: top; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.module-host .aa-table th { color: var(--muted); font-weight: 600; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--panel); }
+.module-host .aa-table tr.aa-new td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.module-host .aa-table td select { padding: 4px 6px; border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent); border-radius: 6px; background: var(--background); color: var(--text); font: inherit; font-size: 12px; }
+.module-host .aa-table td a { color: var(--accent); }
+.module-host .aa-row-actions { white-space: nowrap; }
+.module-host .aa-row-actions .button { padding: 3px 8px; font-size: 11px; margin-left: 4px; }
+.module-host .aa-chat-host { min-height: 320px; }
+.module-host .aa-panel { padding: 20px 22px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--muted) 16%, transparent); border-radius: 10px; }
+.module-host .aa-form { display: flex; flex-direction: column; gap: 14px; }
+.module-host .aa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.module-host .aa-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; min-width: 0; }
+.module-host .aa-field > span { color: var(--muted); letter-spacing: .6px; text-transform: uppercase; font-size: 10px; font-weight: 600; }
+.module-host .aa-field input, .module-host .aa-field textarea, .module-host .aa-field select { width: 100%; padding: 9px 11px; border: 1px solid color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 8px; background: var(--background); color: var(--text); font: inherit; }
+.module-host .aa-field textarea { resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.5; }
+.module-host .aa-field small { font-size: 11px; }
+.module-host .aa-flags { display: flex; gap: 22px; flex-wrap: wrap; }
+.module-host .aa-check { flex-direction: row; align-items: center; gap: 8px; }
+.module-host .aa-check input { width: auto; }
+.module-host .aa-check > span { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); font-weight: 400; }
+.module-host .aa-form-actions { justify-content: flex-end; }
+@media (max-width: 900px) { .module-host .aa-heading { flex-direction: column; align-items: flex-start; } }
+
+.aa-last { border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; }
+.aa-last p { margin: 6px 0 0; white-space: pre-wrap; }
+.aa-last-error { border-color: color-mix(in srgb, #e06c5a 70%, transparent); background: color-mix(in srgb, #e06c5a 10%, transparent); }
+.module-host .aa-block { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 1px solid color-mix(in srgb, var(--muted) 14%, transparent); }
+.module-host .aa-subhead { margin: 6px 0 0; font-size: 14px; font-weight: 600; }
+.module-host .aa-block > p { margin: 0; font-size: 12.5px; }
+.module-host .aa-triggers { display: flex; flex-direction: column; gap: 8px; }
+.module-host .aa-trigger { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent); border-radius: 8px; }
+.module-host .aa-trigger strong { min-width: 74px; font-size: 12.5px; }
+.module-host .aa-trigger input, .module-host .aa-trigger select { padding: 6px 9px; border: 1px solid color-mix(in srgb, var(--muted) 40%, transparent); border-radius: 7px; background: var(--background); color: var(--text); font: inherit; font-size: 13px; }
+.module-host .aa-trigger input[type="text"] { flex: 1; min-width: 200px; }
+.module-host .aa-connectors { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.module-host .aa-conn { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.module-host .aa-conn-off { opacity: .55; }
+.module-host .aa-conn a { color: var(--accent); font-size: 11.5px; }
+.module-host .aa-conn small { font-size: 11px; }
+.module-host .aa-policy-table td { white-space: normal; }
+.module-host .aa-policy-table td:last-child { width: 170px; }
+.module-host .aa-policy-table code { font-size: 11px; }
+.module-host .aa-trigger select, .module-host .aa-trigger input[type="number"], .module-host .aa-trigger input[type="time"] { width: auto; flex: 0 0 auto; }
+.module-host .aa-conn input, .module-host .aa-policy-table select { width: auto; }

@@ -1,0 +1,11 @@
+{
+  "id": "whopr",
+  "name": "WHOPR",
+  "colors": {
+    "background": "#05080C",
+    "panel": "#0A1322",
+    "text": "#E8F4FA",
+    "muted": "#9FC2D8",
+    "accent": "#FFB02E"
+  }
+}

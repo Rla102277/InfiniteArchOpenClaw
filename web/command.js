@@ -1,706 +1,327 @@
-/* Infinite Arch headquarters shell. It reads the local HQ API and is not the system of record. */
-const $ = (id) => document.getElementById(id);
-let token = "";
-let view = { domain: null, selected: null };
-let booted = false;
-let listening = false;
-let voiceOut = false;
-let rec = null;
-let state = { prefs: null, themes: [], status: null, board: null, provenance: "live" };
-let lastRender = "";
-let opener = null;
+/* WHOPR command center. Real data only: every tile, feed line and answer comes from the
+   local runtime (/api/v1 read views, /api/os/state, /api/chat). No mock data, no innerHTML. */
+'use strict';
+(() => {
+const $ = (s) => document.querySelector(s);
+const el = (tag, text, cls) => {
+  const n = document.createElement(tag);
+  if (text !== undefined) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+};
+const TAU = Math.PI * 2;
+const lerp = (a, b, k) => a + (b - a) * k;
 
-function el(tag, text, className) {
-  const node = document.createElement(tag);
-  if (text !== undefined && text !== null) node.textContent = text;
-  if (className) node.className = className;
-  return node;
+/* ---------- state ---------- */
+let snap = null, v1 = {}, csrf = '', openDomain = null;
+const dataChip = $('#data-chip');
+
+async function getJSON(path) {
+  const r = await fetch(path, { cache: 'no-store' });
+  if (!r.ok) throw new Error(path + ' ' + r.status);
+  return r.json();
 }
-function clear(node) { node.replaceChildren(); }
-
-function notice(text) {
-  $("notice").textContent = text || "";
-}
-
-async function call(method, path, body) {
-  const headers = {};
-  const opts = { method, headers };
-  if (body !== undefined) {
-    headers["Content-Type"] = "application/json";
-    headers["X-HQ-Token"] = token;
-    opts.body = JSON.stringify(body);
-  }
-  const response = await fetch(path, opts);
-  let payload = {};
-  try { payload = await response.json(); } catch (_error) { payload = {}; }
-  if (!response.ok) throw new Error(payload.error || "Request failed");
-  return payload;
-}
-
-function applyTheme(id) {
-  document.documentElement.dataset.theme = id || "hud";
-  const colors = { hud: "#05080c", dark: "#12171c", light: "#f7f9fb" };
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", colors[id] || colors.hud);
-}
-
-function domainById(id) {
-  return (state.board.domains || []).find((item) => item.id === id) || null;
-}
-
 async function refresh() {
-  const prefs = await call("GET", "/api/v1/preferences");
-  const themes = await call("GET", "/api/v1/themes");
-  const workspace = encodeURIComponent(prefs.data.workspace_id || "local");
-  const [status, board] = await Promise.all([
-    call("GET", "/api/v1/system/status?workspace=" + workspace),
-    call("GET", "/api/v1/universe?workspace=" + workspace),
-  ]);
-  state = { prefs: prefs.data, themes: themes.data, status: status.data, board: board.data, provenance: board.provenance };
-  if (!booted) {
-    applyTheme(prefs.data.theme || "hud");
-    voiceOut = !!prefs.data.voice_out;
-    view = {
-      domain: (prefs.data.layout && prefs.data.layout.domain) || null,
-      selected: (prefs.data.layout && prefs.data.layout.selected) || null,
-    };
-    fillThemes();
-    booted = true;
+  try {
+    const [state, ...rest] = await Promise.all([
+      getJSON('/api/os/state'),
+      ...['status', 'apps', 'agents', 'tasks', 'schedules', 'runs', 'events', 'approvals', 'conversations', 'themes']
+        .map((r) => getJSON('/api/v1/' + r).catch(() => null)),
+    ]);
+    snap = state;
+    ['status', 'apps', 'agents', 'tasks', 'schedules', 'runs', 'events', 'approvals', 'conversations', 'themes']
+      .forEach((r, i) => { if (rest[i]) v1[r] = rest[i].data; });
+    dataChip.textContent = 'live';
+    dataChip.className = 'chip ok';
+    renderTiles(); renderFeed(); layout(); openHash();
+  } catch (e) {
+    dataChip.textContent = 'API offline';
+    dataChip.className = 'chip ex';
   }
-  syncControls();
-  lastRender = "";
-  render();
-  placeOrbit();
+  setTimeout(refresh, 10000);
 }
 
-function fillThemes() {
-  const theme = $("theme");
-  clear(theme);
-  state.themes.forEach((item) => {
-    const option = el("option", item.label);
-    option.value = item.id;
-    theme.append(option);
-  });
+/* ---------- domains from real data ---------- */
+const BAD = new Set(['failed', 'error', 'rejected', 'missing', 'unavailable']);
+const WARN = new Set(['paused', 'idle', 'awaiting_approval', 'pending', 'warn']);
+function stOf(v) { v = String(v || '').toLowerCase(); return BAD.has(v) ? 'error' : WARN.has(v) ? 'warn' : 'ok'; }
+
+function domains() {
+  const tasks = (v1.tasks && v1.tasks.tasks) || [];
+  const schedules = (v1.schedules && v1.schedules.schedules) || [];
+  const approvals = (v1.approvals && v1.approvals.approvals) || [];
+  const agents = (v1.agents && v1.agents.agents) || [];
+  const events = (v1.events && v1.events.events) || [];
+  const activity = (v1.events && v1.events.activity) || [];
+  const rawConn = snap && snap.connectors;
+  const connectors = Array.isArray(rawConn) ? rawConn : ((rawConn && rawConn.connectors) || []);
+  const apps = (v1.apps && v1.apps.apps) || [];
+  const pending = approvals.filter((a) => a.status === 'pending');
+  const failed = tasks.filter((t) => t.status === 'failed');
+  return [
+    { id: 'apps', name: 'APPS', color: '#3FD8FF', panel: 'apps',
+      st: apps.some((a) => a.status === 'error' || a.error) ? 'error' : 'ok',
+      kpis: [['Module apps', apps.length], ['Records', apps.reduce((n, a) => n + Object.values(a.counts || {}).reduce((m, c) => m + (Number(c) || 0), 0), 0)]],
+      rows: apps.map((a) => ({ name: a.name || a.id, st: a.error ? 'error' : 'ok', link: '#apps' })) },
+    { id: 'agents', name: 'AGENTS', color: '#8EE7C8', panel: 'agents',
+      st: agents.some((a) => a.last_error) ? 'warn' : 'ok',
+      kpis: [['Agents', agents.length], ['Ready', agents.filter((a) => !a.last_error).length]],
+      rows: agents.map((a) => ({ name: a.label || a.name || a.id, st: a.last_error ? 'warn' : 'ok', detail: a.role || a.adapter, link: '#agents' })) },
+    { id: 'approvals', name: 'DECISIONS', color: '#FFB02E', panel: 'tasks',
+      st: pending.length ? 'warn' : 'ok',
+      kpis: [['Pending', pending.length], ['Decided', approvals.length - pending.length]],
+      rows: approvals.slice(0, 12).map((a) => ({ name: a.title || a.id, st: a.status === 'pending' ? 'warn' : 'ok', detail: a.status, link: '#tasks' })) },
+    { id: 'tasks', name: 'TASKS', color: '#FF7A8A', panel: 'tasks',
+      st: failed.length ? 'error' : 'ok',
+      kpis: [['Total', tasks.length], ['Failed', failed.length]],
+      rows: tasks.slice(0, 15).map((t) => ({ name: t.title || t.id, st: stOf(t.status), detail: t.status, link: '#tasks' })) },
+    { id: 'schedules', name: 'SCHEDULES', color: '#9AD7FF', panel: 'schedules',
+      st: schedules.some((s) => (s.history || [])[0] && s.history[0].status === 'failed') ? 'warn' : 'ok',
+      kpis: [['Schedules', schedules.length], ['Enabled', schedules.filter((s) => s.enabled).length]],
+      rows: schedules.map((s) => ({ name: s.name || s.id, st: s.enabled ? 'ok' : 'warn', detail: (s.history || [])[0] ? s.history[0].status : '', link: '#schedules' })) },
+    { id: 'activity', name: 'ACTIVITY', color: '#B7C4DC', panel: 'activity',
+      st: 'ok',
+      kpis: [['Events', events.length], ['Actions', activity.length]],
+      rows: (activity.length ? activity : events).slice(0, 15).map((e) => ({
+        name: e.sentence || e.message || e.event, st: 'ok', detail: e.time || '', link: '#activity' })) },
+    { id: 'connectors', name: 'CONNECTORS', color: '#D8A6FF', panel: 'connectors',
+      st: connectors.some((c) => c.status === 'error' || c.error) ? 'warn' : 'ok',
+      kpis: [['Connectors', connectors.length], ['OK', connectors.filter((c) => !c.error && c.status !== 'error').length]],
+      rows: connectors.map((c) => ({ name: c.name || c.id, st: c.error ? 'warn' : 'ok', detail: c.detail || c.status || '', link: '#connectors' })) },
+    { id: 'system', name: 'SYSTEM', color: '#FFD27A', panel: 'system',
+      st: (v1.status && v1.status.brain && v1.status.brain.drift) ? 'warn' : 'ok',
+      kpis: [['Storage', (snap && snap.storage) || '-'], ['Brain drift', (v1.status && v1.status.brain && v1.status.brain.drift) ? 'yes' : 'no']],
+      rows: ((v1.status && v1.status.capabilities) || []).map((c) => ({ name: c.name, st: stOf(c.status), detail: c.status, link: '#system' })) },
+  ];
 }
 
-function syncControls() {
-  if (document.activeElement !== $("theme")) $("theme").value = state.prefs.theme;
-  $("vout").textContent = voiceOut ? "Voice out on" : "Voice out off";
-  $("vout").setAttribute("aria-pressed", voiceOut ? "true" : "false");
-  const demo = !!state.prefs.demo;
-  $("demo").textContent = demo ? "Demo mode on" : "Demo mode off";
-  $("demo").setAttribute("aria-pressed", demo ? "true" : "false");
-  $("banner").textContent = state.board.banner || "";
-  $("banner").hidden = !state.board.banner;
-  const hermes = (state.status.adapters || []).find((item) => item.id === "hermes");
-  if (!listening) {
-    $("stateChip").textContent = demo ? "Demo" : (hermes && hermes.status === "offline" ? "Hermes offline" : "Idle");
-  }
-    $("modeChip").textContent = state.provenance === "demo" ? "Demo fixtures" : "Live local data";
-    $("new-action").disabled = demo;
-  const workspace = $("workspace");
-  if (document.activeElement !== workspace) {
-    const current = state.prefs.demo ? (state.board.workspaces[0] || {}).id : state.prefs.workspace_id;
-    clear(workspace);
-    (state.board.workspaces || []).forEach((item) => {
-      const option = el("option", item.name);
-      option.value = item.id;
-      workspace.append(option);
-    });
-    if (current) workspace.value = current;
-    workspace.disabled = demo;
-  }
-  const provider = $("provider");
-  if (document.activeElement !== provider) {
-    const current = provider.value || "local-hq";
-    clear(provider);
-    (state.status.adapters || []).forEach((item) => {
-      const option = el("option", item.label + " (" + item.status + ")");
-      option.value = item.id;
-      provider.append(option);
-    });
-    const values = [...provider.options].map((option) => option.value);
-    provider.value = values.includes(current) ? current : (values.includes("local-hq") ? "local-hq" : values[0] || "");
-  }
-}
-
-function render() {
-  const key = JSON.stringify({ view, board: state.board, demo: state.prefs.demo, theme: state.prefs.theme });
-  if (key === lastRender) return;
-  lastRender = key;
-  renderDock();
-  renderOrbit();
-  renderTiles();
-  renderFeed();
-  $("stage").classList.toggle("focused", !!view.domain);
-}
-
-function renderDock() {
-  const dock = $("dock");
-  clear(dock);
-  const home = el("button", "Universe", "dk home");
-  home.type = "button";
-  home.setAttribute("aria-current", view.domain ? "false" : "page");
-  home.addEventListener("click", () => openDomain(null));
-  dock.append(home);
-  (state.board.domains || []).forEach((domain) => {
-    const button = el("button", "", "dk");
-    button.type = "button";
-    const label = el("span", domain.label);
-    const mark = domain.provenance === "demo" ? "demo" : domain.provenance;
-    label.append(el("em", mark, "src " + (domain.provenance === "live" ? "live" : "sample")));
-    button.append(label);
-    button.setAttribute("aria-current", view.domain === domain.id ? "page" : "false");
-    button.addEventListener("click", () => openDomain(domain.id));
-    dock.append(button);
-  });
-}
-
-function renderOrbit() {
-  const orbit = $("orbit");
-  clear(orbit);
-  (state.board.domains || []).forEach((domain) => {
-    const button = el("button", domain.label, "orbit-btn");
-    button.type = "button";
-    button.tabIndex = -1;
-    button.style.setProperty("--c", domain.color);
-    button.addEventListener("click", () => openDomain(domain.id));
-    orbit.append(button);
-  });
-}
-
-function placeOrbit() {
-  const stage = $("stage").getBoundingClientRect();
-  const buttons = $("orbit").querySelectorAll("button");
-  const cx = stage.width / 2;
-  const cy = stage.height * 0.46;
-  const rx = Math.min(stage.width * 0.28, 280);
-  const ry = Math.min(stage.height * 0.28, 160);
-  buttons.forEach((button, index) => {
-    const angle = -Math.PI / 2 + (index / Math.max(buttons.length, 1)) * Math.PI * 2;
-    button.style.left = (cx + Math.cos(angle) * rx) + "px";
-    button.style.top = (cy + Math.sin(angle) * ry) + "px";
-  });
-}
-
-function kpiList(kpis) {
-  const wrap = el("div", null, "mini");
-  (kpis || []).forEach((pair) => {
-    const cell = el("div");
-    cell.append(el("i", pair[0]), el("b", String(pair[1])));
-    wrap.append(cell);
-  });
-  return wrap;
-}
-
+/* ---------- tiles ---------- */
+const tilesEl = $('#tiles');
 function renderTiles() {
-  const left = $("colL");
-  const right = $("colR");
-  clear(left);
-  clear(right);
-  const domain = domainById(view.domain);
-  if (!domain) return;
-  const summary = el("article", null, "tile sum");
-  const head = el("div", null, "th");
-  head.append(el("i", "", "dot"), el("b", domain.label), el("span", domain.provenance));
-  summary.append(head, el("p", domain.summary), kpiList(domain.kpis));
-  left.append(summary);
-  if (domain.provenance === "unavailable") {
-    left.append(el("p", "This module is unavailable. Nothing here is a count of your records.", "empty"));
-    return;
-  }
-  if (!domain.children.length) left.append(el("p", "No records yet.", "empty"));
-  domain.children.forEach((child) => {
-    const card = el("button", null, "tile card" + (view.selected === child.id ? " sel" : ""));
-    card.type = "button";
-    const cardHead = el("div", null, "th");
-    cardHead.append(el("i", "", "dot " + child.status), el("b", child.name), el("span", child.status));
-    card.append(cardHead, el("p", child.summary));
-    card.addEventListener("click", () => selectChild(child.id));
-    left.append(card);
+  const ds = domains();
+  tilesEl.replaceChildren();
+  ds.forEach((d, i) => {
+    const t = el('button', undefined, 'tile st-' + d.st);
+    t.type = 'button';
+    t.dataset.i = i;
+    const th = el('div', undefined, 'th');
+    const dot = el('i', undefined, 'dot');
+    dot.style.background = d.color;
+    th.append(dot, el('b', d.name));
+    const k = el('div', undefined, 'k');
+    d.kpis.forEach(([label, val]) => k.append(el('span', label), el('b', String(val))));
+    t.append(th, k);
+    t.addEventListener('click', () => openDetail(d));
+    tilesEl.append(t);
   });
-  const selected = domain.children.find((child) => child.id === view.selected);
-  if (!selected) {
-    right.append(el("p", "Select a record to see timestamps, status, and actions.", "empty"));
-    return;
-  }
-  const detail = el("article", null, "tile");
-  detail.id = "detail";
-  detail.tabIndex = -1;
-  const detailHead = el("div", null, "th");
-  detailHead.append(el("i", "", "dot " + selected.status), el("h2", selected.name), el("span", selected.provenance));
-  detail.append(detailHead, el("p", selected.summary));
-  const list = el("dl");
-  (selected.fields || []).forEach((field) => {
-    list.append(el("dt", field[0]), el("dd", field[1]));
-  });
-  detail.append(list);
-  const actions = el("div", null, "actions");
-  (selected.actions || []).forEach((action) => {
-    const button = el("button", actionLabel(action), "btn");
-    button.type = "button";
-    button.addEventListener("click", () => runAction(action, selected));
-    actions.append(button);
-  });
-  if (actions.childElementCount) detail.append(actions);
-  if (selected.history && selected.history.length) {
-    detail.append(el("h3", "History"));
-    const history = el("ul", null, "history");
-    selected.history.forEach((item) => {
-      const line = el("li");
-      line.append(el("span", (item.finished_at || item.started_at || "") + " " + (item.status || "")));
-      if (item.error) line.append(el("span", item.error, "err"));
-      else if (item.outcome && String(item.outcome).length < 240) line.append(el("span", item.outcome));
-      history.append(line);
-    });
-    detail.append(history);
-  }
-  right.append(detail);
 }
-
-function actionLabel(action) {
-  const labels = {
-    run: "Run now",
-    pause: "Pause",
-    resume: "Resume",
-    approve: "Approve",
-    deny: "Deny",
-    "accept-demo": "Accept demo",
-    "request-changes": "Request changes",
-  };
-  return labels[action] || action;
+function layout() {
+  const W = innerWidth, H = innerHeight, n = tilesEl.children.length;
+  const cols = W < 700 ? 2 : (n <= 4 ? n : Math.ceil(n / 2));
+  const rows = Math.ceil(n / cols);
+  const cx = W / 2, cy = H * 0.52;
+  [...tilesEl.children].forEach((t, i) => {
+    const col = i % cols, row = (i / cols) | 0;
+    t.style.left = (cx + (col - (cols - 1) / 2) * Math.min(240, W / (cols + 1))) + 'px';
+    t.style.top = (cy + (row - (rows - 1) / 2) * 130) + 'px';
+  });
 }
+addEventListener('resize', layout);
 
+/* ---------- detail ---------- */
+const detail = $('#detail');
+function openDetail(d) {
+  openDomain = d;
+  $('#detail-title').textContent = d.name;
+  const kpis = $('#detail-kpis'); kpis.replaceChildren();
+  d.kpis.forEach(([label, val]) => {
+    const k = el('div', undefined, 'kpi');
+    k.append(el('span', label), el('b', String(val)));
+    kpis.append(k);
+  });
+  const rows = $('#detail-rows'); rows.replaceChildren();
+  if (!d.rows.length) rows.append(el('div', 'No records yet.', 'row'));
+  d.rows.forEach((r) => {
+    const row = r.link ? el('a', undefined, 'row') : el('div', undefined, 'row');
+    if (r.link) { row.href = '/' + r.link; row.title = 'Open in dashboard'; }
+    const st = el('span', r.detail || r.st || '', 'st ' + (r.st === 'error' ? 'bad' : r.st === 'ok' ? 'good' : ''));
+    row.append(el('span', r.name), st);
+    rows.append(row);
+  });
+  detail.hidden = false;
+}
+function openHash() {
+  const wanted = location.hash.slice(1);
+  if (!wanted) return;
+  const d = domains().find((x) => x.id === wanted);
+  if (d) openDetail(d);
+}
+$('#detail-back').addEventListener('click', () => { detail.hidden = true; openDomain = null; });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !detail.hidden) { detail.hidden = true; openDomain = null; } });
+
+/* ---------- feed ---------- */
+const feedEl = $('#feed');
 function renderFeed() {
-  const feed = $("feed");
-  clear(feed);
-  const events = state.board.events || [];
-  if (!events.length) {
-    feed.append(el("p", state.prefs.demo ? "No fixture events." : "No local events yet.", "ev"));
-    return;
-  }
-  events.slice(0, 5).forEach((item) => {
-    const line = el("p", null, "ev");
-    line.append(el("span", item.provenance === "demo" ? "demo" : "live", "tag"));
-    line.append(document.createTextNode(" " + (item.created_at || "") + " " + (item.message || "")));
-    feed.append(line);
+  feedEl.replaceChildren();
+  const items = ((v1.events && (v1.events.activity.length ? v1.events.activity : v1.events.events)) || []).slice(0, 7);
+  items.forEach((e) => {
+    const f = el('div', undefined, 'f');
+    f.append(el('b', (e.time || '').slice(11, 16) + ' '), document.createTextNode(e.sentence || e.message || e.event || ''));
+    feedEl.append(f);
   });
 }
 
-function addHist(kind, text) {
-  const hist = $("hist");
-  const line = el("p", (kind === "you" ? "You: " : "HQ: ") + text, "h " + kind);
-  hist.append(line);
-  while (hist.children.length > 6) hist.firstElementChild.remove();
-}
+/* ---------- chat ---------- */
+const whoprEl = $('#whopr'), histEl = $('#hist'), inp = $('#inp');
+let speaking = false, listening = false;
 
-function maybeSpeak(text) {
-  if (!voiceOut || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+function addHist(cls, text) {
+  const h = el('div', text, 'h ' + cls);
+  histEl.append(h);
+  while (histEl.children.length > 9) histEl.firstChild.remove();
 }
-
-async function saveLayout() {
+function say(t) {
+  const prev = whoprEl.textContent;
+  if (prev && !whoprEl.dataset.done) { addHist('w', prev); }
+  whoprEl.dataset.done = '';
+  whoprEl.textContent = t;
+}
+async function send(text) {
+  const raw = (text || '').trim();
+  if (!raw) return;
+  addHist('you', raw);
+  const low = raw.toLowerCase().replace(/^(hey|ok|okay)\s+whopr[,.!\s]*/, '').replace(/^(open|show me|show|go to|zoom to|zoom in on)\s+/, '').trim();
+  const d = domains().find((x) => x.id === low || x.name.toLowerCase() === low || (x.id + 's') === low);
+  if (d) { openDetail(d); say(d.name + ' on screen.'); return; }
+  whoprEl.classList.add('think');
+  say('Thinking...');
   try {
-    const saved = await call("PUT", "/api/v1/preferences", { layout: { domain: view.domain, selected: view.selected } });
-    state.prefs = saved.data;
-  } catch (error) {
-    notice(error.message);
-  }
-}
-
-function openDomain(id) {
-  view = { domain: id, selected: null };
-  lastRender = "";
-  render();
-  placeOrbit();
-  saveLayout();
-}
-
-function selectChild(id) {
-  view.selected = id;
-  lastRender = "";
-  render();
-  const detail = $("detail");
-  if (detail) detail.focus();
-  saveLayout();
-}
-
-async function runAction(action, selected) {
-  const workspace = encodeURIComponent(state.prefs.workspace_id || "local");
-  try {
-    if (action === "run") {
-      const result = await call("POST", "/api/v1/schedules/" + selected.id + "/run?workspace=" + workspace, {});
-      notice("Run " + result.data.status + " at " + (result.data.finished_at || ""));
-    } else if (action === "pause" || action === "resume") {
-      await call("PATCH", "/api/v1/schedules/" + selected.id + "?workspace=" + workspace, { enabled: action === "resume" });
-      notice(action === "resume" ? "Schedule resumed." : "Schedule paused.");
-    } else if (action === "approve" || action === "deny" || action === "accept-demo" || action === "request-changes") {
-      const decision = { approve: "approved", deny: "denied", "accept-demo": "accepted", "request-changes": "changes_requested" }[action];
-      const warning = action === "accept-demo" || action === "request-changes"
-        ? "This records an owner decision and does not merge or deploy."
-        : "This records your decision. The headquarters shell will not send or execute an external action.";
-      if (!window.confirm(warning)) return;
-      await call("POST", "/api/v1/approvals/" + selected.id + "/decision?workspace=" + workspace, { decision });
-      notice("Decision recorded.");
-    }
-    lastRender = "";
-    await refresh();
-  } catch (error) {
-    notice(error.message);
-  }
-}
-
-function labeled(text, control) {
-  const label = el("label");
-  label.append(document.createTextNode(text), control);
-  return label;
-}
-function fieldInput(id, required) {
-  const node = el("input");
-  node.id = id;
-  if (required) node.required = true;
-  return node;
-}
-function fieldArea(id) {
-  const node = el("textarea");
-  node.id = id;
-  node.required = true;
-  node.rows = 4;
-  return node;
-}
-
-function buildEditorFields(kind) {
-  const fields = $("editor-fields");
-  while (fields.children.length > 1) fields.lastElementChild.remove();
-  if (kind === "agent") {
-    fields.append(labeled("Name", fieldInput("agent-name", true)));
-    fields.append(labeled("Purpose", fieldArea("agent-purpose")));
-    const adapters = el("select");
-    adapters.id = "agent-adapter";
-    (state.status.adapters || []).forEach((item) => {
-      const option = el("option", item.label);
-      option.value = item.id;
-      adapters.append(option);
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-HQ-Token': csrf },
+      body: JSON.stringify({ text: raw }),
     });
-    fields.append(labeled("Adapter", adapters));
-    const locality = el("select");
-    locality.id = "agent-locality";
-    [["local", "Local"], ["provider-choice", "Provider choice"]].forEach(([value, label]) => {
-      const option = el("option", label);
-      option.value = value;
-      locality.append(option);
-    });
-    fields.append(labeled("Locality", locality));
-  } else if (kind === "task") {
-    fields.append(labeled("Title", fieldInput("task-title", true)));
-    fields.append(labeled("Detail", fieldArea("task-detail")));
-  } else {
-    fields.append(labeled("Name", fieldInput("sched-name", true)));
-    const cadence = fieldInput("sched-cadence", false);
-    cadence.inputMode = "numeric";
-    cadence.placeholder = "Seconds, or leave empty for manual";
-    fields.append(labeled("Cadence seconds", cadence));
-  }
-  const confirm = fieldInput("editor-confirm", true);
-  confirm.type = "checkbox";
-  const confirmLabel = el("label");
-  confirmLabel.append(confirm, document.createTextNode(" I understand this does not install software, send messages, or push Git."));
-  fields.append(confirmLabel);
-  const help = {
-    external: "An external action waits for your approval and is still not executed by this shell.",
-    agent: "This writes a proposed definition for you to review in Git. It does not install the agent.",
-  };
-  $("editor-help").textContent = help[kind] || "This writes a local record on this machine.";
-}
-
-function openEditor(from) {
-  opener = from;
-  const fields = $("editor-fields");
-  clear(fields);
-  const kind = el("select");
-  kind.id = "editor-kind";
-  [
-    ["task", "Task"],
-    ["schedule", "Scheduled local check"],
-    ["note", "Scheduled local note"],
-    ["external", "External action (approval only)"],
-    ["agent", "Agent proposal"],
-  ].forEach(([value, label]) => {
-    const option = el("option", label);
-    option.value = value;
-    kind.append(option);
-  });
-  fields.append(labeled("What do you want to add?", kind));
-  kind.addEventListener("change", () => buildEditorFields(kind.value));
-  buildEditorFields("task");
-  $("editor").showModal();
-  kind.focus();
-}
-
-async function saveEditor(event) {
-  event.preventDefault();
-  const kind = $("editor-kind").value;
-  if (!$("editor-confirm").checked) {
-    notice("Confirm that this stays on the machine.");
-    return;
-  }
-  const workspace = state.prefs.workspace_id || "local";
-  try {
-    if (kind === "task") {
-      await call("POST", "/api/v1/tasks", {
-        title: $("task-title").value,
-        detail: $("task-detail").value,
-        workspace_id: workspace,
-      });
-      view.domain = "tasks";
-    } else if (kind === "agent") {
-      await call("POST", "/api/v1/agents", {
-        name: $("agent-name").value,
-        purpose: $("agent-purpose").value,
-        adapter: $("agent-adapter").value,
-        locality: $("agent-locality").value,
-        workspace_id: workspace,
-      });
-      view.domain = "agents";
-      notice("Proposal written for Git review. Nothing was installed or pushed.");
-    } else {
-      const payload = {
-        name: $("sched-name").value,
-        kind: kind === "note" ? "local-note" : (kind === "external" ? "external-action" : "adapter-status"),
-        workspace_id: workspace,
-      };
-      const cadence = $("sched-cadence").value.trim();
-      if (cadence) {
-        const parsed = Number(cadence);
-        if (!Number.isInteger(parsed)) throw new Error("Cadence must be a whole number of seconds.");
-        payload.cadence_seconds = parsed;
-      }
-      await call("POST", "/api/v1/schedules", payload);
-      view.domain = "schedules";
-    }
-    $("editor").close();
-    lastRender = "";
-    await refresh();
-  } catch (error) {
-    notice(error.message);
+    const j = await r.json();
+    whoprEl.classList.remove('think');
+    if (!r.ok) { say(j.error || ('Error ' + r.status)); return; }
+    say(j.message || j.answer || '(no answer)');
+  } catch (e) {
+    whoprEl.classList.remove('think');
+    say('The local OS is not answering. Is ./hq start running?');
   }
 }
-
-function setRecording(active) {
-  listening = active;
-  $("mic").classList.toggle("recording", active);
-  $("mic").setAttribute("aria-pressed", active ? "true" : "false");
-  $("mic").textContent = active ? "Recording" : "Microphone off";
-  $("stateChip").textContent = active ? "Recording" : $("stateChip").textContent;
-}
-
-function toggleMic() {
-  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Speech) {
-    $("voiceNote").textContent = "This browser has no speech recognition. Type the command. Audio is not uploaded.";
-    return;
-  }
-  if (listening && rec) {
-    rec.stop();
-    return;
-  }
-  rec = new Speech();
-  rec.lang = "en-US";
-  rec.interimResults = false;
-  rec.continuous = false;
-  rec.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    $("inp").value = text;
-    $("voiceNote").textContent = "Transcript stays in the command box until you send it. Audio was not uploaded by HQ.";
-  };
-  rec.onerror = (event) => {
-    setRecording(false);
-    $("voiceNote").textContent = event.error === "not-allowed"
-      ? "Microphone permission was denied. Nothing was recorded."
-      : "Microphone stopped (" + event.error + "). You can type instead.";
-  };
-  rec.onend = () => setRecording(false);
-  try {
-    rec.start();
-    setRecording(true);
-    $("voiceNote").textContent = "Microphone is recording on this device. HQ does not upload audio.";
-  } catch (_error) {
-    setRecording(false);
-    $("voiceNote").textContent = "Microphone did not start. You can type instead.";
-  }
-}
-
-function tickClock() {
-  const now = new Date();
-  $("clock").textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  $("clock").setAttribute("datetime", now.toISOString());
-}
-
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-function draw(time) {
-  const canvas = $("cv");
-  const rect = canvas.parentElement.getBoundingClientRect();
-  const ratio = window.devicePixelRatio || 1;
-  canvas.width = Math.max(1, Math.floor(rect.width * ratio));
-  canvas.height = Math.max(1, Math.floor(rect.height * ratio));
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, rect.width, rect.height);
-  const cx = rect.width / 2;
-  const cy = rect.height * 0.46;
-  const radius = Math.min(rect.width, rect.height) * 0.16;
-  const cyan = getComputedStyle(document.documentElement).getPropertyValue("--cyan").trim() || "#7ee7ff";
-  ctx.strokeStyle = cyan;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, Math.max(radius, 20), 0, Math.PI * 2);
-  ctx.stroke();
-  const spin = reducedMotion ? 0 : time / 12000;
-  const domains = (state.board && state.board.domains) || [];
-  domains.forEach((domain, index) => {
-    const angle = spin + (index / Math.max(domains.length, 1)) * Math.PI * 2 - Math.PI / 2;
-    ctx.fillStyle = domain.color || cyan;
-    ctx.beginPath();
-    ctx.arc(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius * 0.72, 4, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.globalAlpha = 1;
-  if (!reducedMotion) requestAnimationFrame(draw);
-}
-
-$("theme").addEventListener("change", async () => {
-  const theme = $("theme").value;
-  applyTheme(theme);
-  try {
-    const saved = await call("PUT", "/api/v1/preferences/theme", { theme });
-    state.prefs = saved.data;
-    notice("Theme saved on this machine.");
-  } catch (error) {
-    notice(error.message);
+whoprEl.addEventListener('click', () => { inp.hidden = false; inp.focus(); });
+inp.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { const v = inp.value; inp.value = ''; inp.hidden = true; send(v); }
+  if (e.key === 'Escape') { inp.value = ''; inp.hidden = true; }
+});
+addEventListener('keydown', (e) => {
+  if (inp.hidden && e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey && e.target === document.body) {
+    inp.hidden = false; inp.focus();
   }
 });
 
-$("workspace").addEventListener("change", async () => {
-  if (state.prefs.demo) return;
-  try {
-    await call("PUT", "/api/v1/preferences", { workspace_id: $("workspace").value });
-    view = { domain: null, selected: null };
-    lastRender = "";
-    await refresh();
-  } catch (error) {
-    notice(error.message);
-  }
-});
-
-$("demo").addEventListener("click", async () => {
-  try {
-    await call("PUT", "/api/v1/preferences", { demo: !state.prefs.demo });
-    view = { domain: view.domain, selected: null };
-    lastRender = "";
-    await refresh();
-  } catch (error) {
-    notice(error.message);
-  }
-});
-
-$("vout").addEventListener("click", async () => {
+/* ---------- voice out: browser speechSynthesis only ---------- */
+let voiceOut = false;
+try { voiceOut = localStorage.getItem('whopr.voice') === '1'; } catch (e) {}
+const voutBtn = $('#vout');
+function setVout() { voutBtn.textContent = 'Voice out: ' + (voiceOut ? 'on' : 'off'); voutBtn.classList.toggle('on', voiceOut); }
+setVout();
+voutBtn.addEventListener('click', () => {
   voiceOut = !voiceOut;
-  $("voiceNote").textContent = voiceOut
-    ? "Voice out uses this browser speech engine. Some browsers send speech to their own service. HQ does not upload audio."
-    : "Voice out is off.";
-  $("vout").textContent = voiceOut ? "Voice out on" : "Voice out off";
-  $("vout").setAttribute("aria-pressed", voiceOut ? "true" : "false");
-  if (!voiceOut && window.speechSynthesis) window.speechSynthesis.cancel();
-  try {
-    const saved = await call("PUT", "/api/v1/preferences", { voice_out: voiceOut });
-    state.prefs = saved.data;
-  } catch (error) {
-    notice(error.message);
-  }
+  try { localStorage.setItem('whopr.voice', voiceOut ? '1' : '0'); } catch (e) {}
+  setVout();
+  if (!voiceOut && 'speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch (e) {} speaking = false; }
 });
+const origSay = say;
+say = function (t) {
+  origSay(t);
+  if (voiceOut && 'speechSynthesis' in window && t && !t.startsWith('Thinking')) {
+    try {
+      const u = new SpeechSynthesisUtterance(t);
+      u.rate = 1.02;
+      u.onend = () => { speaking = false; };
+      speaking = true;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+};
 
-$("mic").addEventListener("click", toggleMic);
-$("new-action").addEventListener("click", (event) => openEditor(event.currentTarget));
-$("editor-cancel").addEventListener("click", () => $("editor").close());
-$("editor").addEventListener("close", () => { if (opener) opener.focus(); });
-$("editor-form").addEventListener("submit", saveEditor);
-
-$("composer").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const text = $("inp").value.trim();
-  if (!text) return;
-  $("inp").value = "";
-  addHist("you", text);
-  const lower = text.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
-  if (["home", "universe", "back"].includes(lower)) {
-    openDomain(null);
-    addHist("hq", "Back to the universe.");
-    return;
-  }
-  const domain = (state.board.domains || []).find((item) => lower === item.id || lower === item.label.toLowerCase() || lower === "open " + item.label.toLowerCase());
-  if (domain) {
-    openDomain(domain.id);
-    addHist("hq", "Opened " + domain.label + ".");
-    return;
-  }
-  if (state.prefs.demo) {
-    addHist("hq", "Demo mode only navigates fixtures. Turn demo mode off to store a command.");
-    return;
-  }
-  try {
-    const result = await call("POST", "/api/v1/conversations/command/messages", {
-      text,
-      provider: $("provider").value || "local-hq",
-      locality: "local",
-    });
-    addHist("hq", result.data.result.text);
-    maybeSpeak(result.data.result.text);
-  } catch (error) {
-    addHist("hq", error.message);
-    notice(error.message);
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    if ($("editor").open) return;
-    if (view.selected) selectChild(null);
-    else if (view.domain) openDomain(null);
-    return;
-  }
-  if (event.metaKey || event.ctrlKey || event.altKey) return;
-  const tag = event.target && event.target.tagName;
-  if (tag && ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(tag)) return;
-  if (event.key.length === 1) {
-    $("inp").focus();
-    $("inp").value += event.key;
-    event.preventDefault();
-  }
-});
-
-window.addEventListener("resize", placeOrbit);
-tickClock();
-setInterval(tickClock, 1000);
-requestAnimationFrame(draw);
-setInterval(() => {
-  const active = document.activeElement;
-  if ($("editor").open || listening) return;
-  if (active && active !== document.body && active !== $("inp")) return;
-  refresh().catch((error) => notice(error.message));
-}, 8000);
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {});
+/* ---------- mic: SpeechRecognition, off until pressed, hidden if unsupported ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const micBtn = $('#mic');
+let rec = null;
+if (SR) {
+  micBtn.hidden = false;
+  micBtn.addEventListener('click', () => {
+    if (listening) { try { rec.stop(); } catch (e) {} return; }
+    rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1;
+    rec.onresult = (e) => { const t = e.results[0][0].transcript; listening = false; micBtn.classList.remove('rec'); send(t); };
+    rec.onend = () => { listening = false; micBtn.classList.remove('rec'); };
+    rec.onerror = () => { listening = false; micBtn.classList.remove('rec'); say('Mic did not catch that.'); };
+    try { rec.start(); listening = true; micBtn.classList.add('rec'); say('Listening...'); }
+    catch (e) { say('Mic is not available here.'); }
+  });
 }
 
-(async () => {
-  try {
-    const csrf = await call("GET", "/api/csrf");
-    token = csrf.token;
-    await refresh();
-  } catch (_error) {
-    notice("Could not reach the local headquarters service.");
+/* ---------- orb canvas ---------- */
+const cv = $('#stage'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const NP = 1600, P = [];
+for (let i = 0; i < NP; i++) {
+  const y = 1 - 2 * (i + .5) / NP, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+  P.push({ x: Math.cos(th) * r, y, z: Math.sin(th) * r });
+}
+const LINKS = [];
+for (let n = 0; n < NP; n += 4) {
+  const a = P[n]; let best = null, bd = 0;
+  for (let j = n + 4; j < Math.min(n + 220, NP); j += 4) {
+    const d = a.x * P[j].x + a.y * P[j].y + a.z * P[j].z;
+    if (d > bd) { bd = d; best = j; }
   }
+  if (best !== null && bd > .985) LINKS.push([n, best]);
+}
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+}
+addEventListener('resize', resize); resize();
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let rot = 0;
+function frame() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H * 0.52, R = Math.min(W, H) * 0.42;
+  rot += reduced ? 0 : 0.0016;
+  const co = Math.cos(rot), si = Math.sin(rot);
+  const pr = P.map((p) => {
+    const x = p.x * co - p.z * si, z = p.x * si + p.z * co;
+    return { sx: cx + x * R, sy: cy + p.y * R * 0.92, z };
+  });
+  ctx.strokeStyle = 'rgba(63,216,255,0.10)'; ctx.lineWidth = 1;
+  for (const [a, b] of LINKS) {
+    if (pr[a].z < -0.2 && pr[b].z < -0.2) continue;
+    ctx.beginPath(); ctx.moveTo(pr[a].sx, pr[a].sy); ctx.lineTo(pr[b].sx, pr[b].sy); ctx.stroke();
+  }
+  for (const q of pr) {
+    const front = (q.z + 1) / 2;
+    ctx.fillStyle = `rgba(63,216,255,${0.06 + front * 0.5})`;
+    ctx.beginPath(); ctx.arc(q.sx, q.sy, 0.7 + front * 1.2, 0, TAU); ctx.fill();
+  }
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.9);
+  g.addColorStop(0, 'rgba(255,176,46,0.10)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (listening || speaking) {
+    ctx.strokeStyle = `rgba(255,176,46,${0.25 + 0.15 * Math.sin(rot * 60)})`;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.6, 0, TAU); ctx.stroke();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---------- boot ---------- */
+getJSON('/api/csrf').then((j) => { csrf = j.token || ''; }).catch(() => {});
+refresh();
 })();

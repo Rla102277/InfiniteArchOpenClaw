@@ -1,0 +1,11 @@
+{
+  "id": "midnight",
+  "name": "Midnight",
+  "colors": {
+    "background": "#101725",
+    "panel": "#1B263A",
+    "text": "#F0F4FF",
+    "muted": "#B7C4DC",
+    "accent": "#A9BEFF"
+  }
+}

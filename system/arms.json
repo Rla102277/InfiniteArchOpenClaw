@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "about": "Settings for the headquarters ARMS views (aihq/arms.py). Rates are USD per million tokens; leave null and the Usage view shows tokens only, never a guessed price.",
+  "rates_per_million_tokens": {
+    "input": null,
+    "cache_write": null,
+    "cache_read": null,
+    "output": null
+  },
+  "rebuild_reads_photos": false,
+  "routine_modes": {
+    "canon-sync": "passive",
+    "daily-digest": "passive",
+    "ia-morning": "active"
+  }
+}

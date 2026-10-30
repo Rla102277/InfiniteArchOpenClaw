@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "name": "InfiniteArch Agentic OS",
+  "version": "1.0.0",
+  "default_adapter": "hermes",
+  "default_theme": "forest"
+}

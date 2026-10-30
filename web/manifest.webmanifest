@@ -1,15 +1,14 @@
 {
-  "name": "Infinite Arch HQ",
-  "short_name": "Arch HQ",
-  "description": "Selectable local headquarters for the Infinite Arch.",
-  "start_url": "/command",
+  "name": "THE INFINITE ARCH Agentic OS",
+  "short_name": "Infinite Arch",
+  "description": "Your apps, agents, tasks and approvals, routines and memory, in one place.",
+  "start_url": "/",
   "scope": "/",
-  "display": "fullscreen",
-  "orientation": "any",
-  "background_color": "#05080c",
-  "theme_color": "#05080c",
+  "display": "standalone",
+  "background_color": "#101a18",
+  "theme_color": "#101a18",
   "icons": [
-    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ]
 }

@@ -1,9 +1,0 @@
-{
-  "id": "implementation-adapter",
-  "name": "Implementation adapter",
-  "purpose": "Apply one approved slice through a swappable coding adapter. The headquarters shell does not run the adapter by itself.",
-  "adapter": "codex",
-  "locality": "local",
-  "network": "provider-dependent",
-  "status": "defined"
-}

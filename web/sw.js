@@ -1,24 +1,5 @@
-/* Cache the headquarters shell only. API responses stay uncached. */
-const CACHE = "arch-hq-shell-v1";
-const FILES = [
-  "/command",
-  "/command.css",
-  "/command.js",
-  "/themes/themes.css",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/apple-touch-icon.png"
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
-});
-
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.pathname.startsWith("/api/")) {
-    return;
-  }
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-});
+// Minimal service worker so the OS installs as an app. It caches nothing: the OS is local and
+// every view must be live. It only exists so Chrome and Safari offer "Install".
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", () => {});

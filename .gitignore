@@ -12,3 +12,12 @@ __pycache__/
 *.log
 *.bak
 *.sqlite3
+*.sqlite3-*
+*.sqlite
+*.db
+runtime/
+private/
+secrets/
+exports/
+logs/
+.brain-build-*/

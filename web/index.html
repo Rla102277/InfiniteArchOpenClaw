@@ -1,34 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Personal AI HQ</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#101a18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Agentic OS">
+  <title>InfiniteArch · Agentic OS</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
 </head>
 <body>
-<div class="shell">
-<aside class="sidebar">
-  <div class="brand"><div class="mark">◈</div><div><strong>PERSONAL HQ</strong><span>Agentic workspace</span></div></div>
-  <div class="section-label">YOUR WORKSPACE</div>
-  <nav><a class="active" href="#overview">▦ &nbsp; Overview</a><a href="#projects">◫ &nbsp; Projects</a><a href="#activity">≋ &nbsp; Activity</a><a href="#approvals">◎ &nbsp; Approvals</a><a href="/command">✧ &nbsp; Command</a><a href="#skills">◇ &nbsp; Skills</a></nav>
-  <div class="sidebar-foot"><span class="status-dot"></span> Local-only server<br><small>Prototype 0.1 · No remote exposure</small></div>
-</aside>
-<main>
-  <header><div><span class="eyebrow">YOUR PERSONAL AGENTIC OPERATING SYSTEM</span><h1>Good to see you.</h1><p>Turn ideas into working projects, one verified step at a time.</p></div><div class="header-actions"><button id="refresh" class="secondary">Refresh</button><button id="new-project" class="primary">+ New project</button></div></header>
-  <div id="notice" role="status" aria-live="polite"></div>
-  <section class="hero" id="overview"><div><span class="eyebrow">START HERE</span><h2>What would you like to build?</h2><p>Describe the idea. Your engineering agent will help you shape it through questions, specifications, and small, tested changes.</p><button id="hero-create" class="primary">Start a project →</button></div><div class="hero-mark">✳</div></section>
-  <section class="stats"><div><span>PROJECTS</span><strong id="stat-projects">0</strong><small>In your workspace</small></div><div><span>AWAITING REVIEW</span><strong id="stat-approvals">0</strong><small>Owner decisions</small></div><div><span>BUILT-IN SKILLS</span><strong id="stat-skills">0</strong><small>Version-controlled</small></div><div><span>CODING AGENTS</span><strong id="stat-agents">0/2</strong><small>Detected on this machine</small></div></section>
-  <div class="columns">
-    <section id="projects" class="panel"><div class="panel-head"><div><h2>Projects</h2><p>Your ideas, specifications and milestones</p></div><button id="add-project" class="ghost">+ Add</button></div><div id="project-list" class="stack"></div></section>
-    <section id="approvals" class="panel"><div class="panel-head"><div><h2>Needs your attention</h2><p>Nothing ships without review</p></div></div><div id="approval-list" class="stack"></div></section>
+  <a class="skip-link" href="#main">Skip to workspace</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <a class="brand" href="#overview"><span class="brand-mark" aria-hidden="true">∩</span><span>InfiniteArch<small>AGENTIC OS</small></span></a>
+      <p class="nav-label">YOUR WORKSPACE</p>
+      <nav id="navigation">
+        <a href="#overview" aria-current="page"><span aria-hidden="true">◈</span> Overview</a>
+        <a href="#today" data-panel-link="today"><span aria-hidden="true">☀</span> Today</a>
+        <a href="#apps" data-panel-link="apps"><span aria-hidden="true">▦</span> Applications</a>
+        <a href="#agents" data-panel-link="agents"><span aria-hidden="true">◉</span> Agents</a>
+        <a href="#connectors" data-panel-link="connectors"><span aria-hidden="true">⌁</span> Connectors <span id="nav-connectors" class="nav-count" hidden>0</span></a>
+        <a href="#activity" data-panel-link="activity"><span aria-hidden="true">≋</span> Activity</a>
+        <a href="#tasks" data-panel-link="tasks"><span aria-hidden="true">↗</span> Tasks & approvals <span id="nav-approvals" class="nav-count">0</span></a>
+        <a href="#skills" data-panel-link="skills"><span aria-hidden="true">✦</span> Skills</a>
+        <a href="#recos" data-panel-link="recos"><span aria-hidden="true">✚</span> Recos <span id="nav-cart" class="nav-count">0</span></a>
+        <a href="#schedules" data-panel-link="schedules"><span aria-hidden="true">◷</span> Schedules</a>
+        <a href="#routines" data-panel-link="routines"><span aria-hidden="true">↻</span> Routines</a>
+        <a href="#memory" data-panel-link="memory"><span aria-hidden="true">◇</span> Memory</a>
+        <a href="#usage" data-panel-link="usage"><span aria-hidden="true">▤</span> Usage</a>
+        <a href="#system" data-panel-link="system"><span aria-hidden="true">⚙</span> System</a>
+        <a href="/command"><span aria-hidden="true">◉</span> WHOPR</a>
+      </nav>
+      <p id="apps-nav-label" class="nav-label" hidden>APPS</p>
+      <nav id="apps-navigation" aria-label="Apps"></nav>
+      <div class="sidebar-bottom"><span class="local-label">REPOSITORY WORKSPACE</span><p>Your ideas. Your decisions.</p><small>Approvals remain in your hands.</small><button id="customize" class="button subtle">Customize workspace</button></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <header class="topbar"><span class="breadcrumb">Workspace <span aria-hidden="true">/</span> Overview</span><div class="connection"><span id="connection-dot" class="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Connecting…</span><button id="refresh" class="button icon-button" aria-label="Refresh workspace">↻</button></div></header>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <section id="overview" class="overview" aria-labelledby="page-title">
+        <div class="page-heading"><div><p class="eyebrow">THE INFINITE ARCH</p><h1 id="page-title">Your workspace, today.</h1><p class="lead" id="overview-lead">From hq/HQ.md and your apps.</p></div></div>
+        <div class="stats" aria-label="Workspace summary"><div><span class="stat-label">APPS</span><strong id="stat-apps">·</strong><small id="stat-enabled">Waiting for workspace</small></div><div><span class="stat-label">IN THE QUEUE</span><strong id="stat-tasks">·</strong><small>Tasks awaiting execution</small></div><div><span class="stat-label">NEEDS YOUR DECISION</span><strong id="stat-approvals">·</strong><small id="stat-approvals-note">Approvals across the OS and its apps</small></div><div><span class="stat-label">MEMORIES</span><strong id="stat-memory">·</strong><small>What every agent reads first</small></div></div>
+        <div id="overview-health" class="health" aria-live="polite"></div>
+        <div id="overview-bots-card" class="bots-card"><h2 class="section-title">What the bots did <a class="section-link" href="#activity">All activity →</a></h2><div id="overview-bots" class="stack"></div></div>
+        <div class="practice-grid">
+          <div class="practice-top3"><h2 class="section-title">Top 3 <small id="overview-built" class="muted"></small></h2><div id="overview-top3" class="stack"></div><p class="practice-links"><a href="#app/curator/today">Today in the Curator →</a><a id="overview-inbox-link" href="#app/curator/inbox">Inbox →</a><a id="overview-darkroom-link" href="#app/darkroom/status">Darkroom →</a></p></div>
+          <div class="practice-ask"><h2 class="section-title">Chat with the Curator <a id="overview-chat-open" class="section-link" href="#app/curator/ask">Open in Curator →</a></h2><div id="overview-chat" class="chat-host"></div></div>
+        </div>
+      </section>
+      <section id="command" class="panel full-width command-panel" aria-labelledby="command-heading">
+        <div class="panel-heading"><div><p class="eyebrow">COMMAND YOUR AGENTS</p><h2 id="command-heading">Give an agent work</h2><p>Pick an agent, say what you want. You approve it here, the worker runs it, and the reply lands below.</p></div></div>
+        <form id="command-form" class="form-stack">
+          <div class="input-pair"><label class="sr-only" for="command-agent">Agent</label><select id="command-agent" name="agent" aria-label="Agent"></select>
+            <label class="sr-only" for="command-mode">Mode</label><select id="command-mode" name="mode" aria-label="Mode"><option value="read">Read and answer</option><option value="edit">Edit on its own branch</option></select></div>
+          <label for="command-prompt">What should it do?</label>
+          <textarea id="command-prompt" name="prompt" rows="3" required maxlength="6000" placeholder="e.g. List my open approvals and any failed runs."></textarea>
+          <p id="command-hint" class="field-hint">Read mode answers only. Edit mode works in a fresh copy of the repo on an agent/ branch and commits there; it never pushes or touches your checkout.</p>
+          <button class="button primary" type="submit">Send to agent</button>
+        </form>
+        <h3 class="section-title">Recent agent work</h3>
+        <div id="command-list" class="stack"></div>
+        <p id="module-ask-links" class="module-ask-links" hidden></p>
+      </section>
+      <div id="module-hosts" class="module-hosts"></div>
+      <div class="workspace-grid">
+        <section id="today" class="panel full-width" aria-labelledby="today-heading"><div class="panel-heading"><div><p class="eyebrow">WHAT MATTERS NOW</p><h2 id="today-heading">Today</h2><p>Overdue, due this week and waiting on your ruling, from hq/HQ.md.</p></div><div id="today-kpis" class="kpis"></div></div><div id="today-list" class="stack"></div></section>
+        <section id="apps" class="panel full-width" aria-labelledby="apps-heading"><div class="panel-heading"><div><p class="eyebrow">YOUR TOOLKIT</p><h2 id="apps-heading">Applications</h2><p>Apps are code under apps/&lt;id&gt; (system/contracts/MODULES.md): their views, agents and routines mount into this OS. Agent apps are made by asking: describe what it should do and the Operator builds it.</p></div><button id="apps-new" class="button secondary">+ New app</button></div><div id="app-list" class="app-grid"><p class="empty">Loading applications…</p></div></section>
+        <section id="tasks" class="panel full-width" aria-labelledby="tasks-heading">
+          <div class="panel-heading"><div><p class="eyebrow">MAKE THINGS HAPPEN</p><h2 id="tasks-heading">Tasks & approvals</h2><p>Review decisions, then keep your work moving.</p></div><button id="worker-tick" class="button secondary">Run built-in tasks</button></div>
+          <p class="context-note">External agents require an approved task and the local CLI worker with <code>--allow-external</code>. This button runs built-in tasks only. Approval does not merge or deploy code.</p>
+          <div class="task-columns"><div><h3 class="section-title">Needs your approval</h3><div id="approval-list" class="stack"></div><h3 class="section-title">Task queue</h3><div id="task-list" class="stack bounded-list"></div></div>
+            <form id="task-form" class="inset form-stack"><h3>Create a task</h3><label for="task-title">Task title</label><input id="task-title" name="title" required maxlength="160" placeholder="What needs doing?"><label for="task-operation">Type of work</label><select id="task-operation" name="operation"><option value="digest.create">Create workspace digest</option><option value="memory.put">Save a memory</option><option value="agent.prompt">Ask an external agent</option></select><div id="task-memory-fields" class="form-stack" hidden><label for="task-key">Memory key</label><input id="task-key" name="key" maxlength="120" placeholder="e.g. creative-direction"><label for="task-content">Memory content</label><textarea id="task-content" name="content" rows="4" maxlength="6000"></textarea></div><div id="task-agent-fields" class="form-stack" hidden><label for="task-adapter">Agent adapter</label><select id="task-adapter" name="adapter"></select><div id="task-model-fields" class="form-stack" hidden><label for="task-model">Ollama model (optional)</label><input id="task-model" name="model" maxlength="120" placeholder="e.g. qwen3:8b" aria-describedby="task-model-hint"><p id="task-model-hint" class="field-hint">Use the exact tag of an already installed local model. Leave empty to use the worker default.</p></div><label for="task-prompt">Instructions</label><textarea id="task-prompt" name="prompt" rows="5" maxlength="6000" placeholder="Give the agent a clear, bounded task."></textarea><p class="field-hint">Creates a task for approval. External execution happens through your local CLI worker.</p></div><button class="button primary" type="submit">Add to queue</button></form>
+          </div>
+        </section>
+        <section id="agents" class="panel full-width" aria-labelledby="agents-heading"><div class="panel-heading"><div><p class="eyebrow">YOUR TEAM</p><h2 id="agents-heading">Agents</h2><p>Who can work, whether they are on this Mac right now, and how their last run went.</p></div><span class="section-glyph" aria-hidden="true">◉</span></div>
+          <div id="agent-list" class="app-grid"></div>
+          <h3 class="section-title">Proposed agents</h3><div id="proposal-list" class="stack"></div>
+          <details class="form-details"><summary>Propose a new agent</summary><form id="agent-form" class="form-stack"><label for="agent-id">Agent id</label><input id="agent-id" name="id" required maxlength="64" pattern="[a-z][a-z0-9\-]{0,63}" placeholder="e.g. print-checker"><label for="agent-role">Role</label><input id="agent-role" name="role" required maxlength="160" placeholder="What it is for, in one line"><label for="agent-adapter">Runs on</label><select id="agent-adapter" name="adapter"><option value="claude">Claude</option><option value="codex">Codex</option><option value="hermes">Hermes</option><option value="ollama">Ollama (local)</option><option value="devin">Devin (handoff only)</option></select><label for="agent-skills">Skills (comma separated)</label><input id="agent-skills" name="skills" maxlength="400" placeholder="ia-log, critic"><p class="field-hint">Writes proposals/agents/&lt;id&gt;.json. Accept it to add the agent, then commit.</p><button class="button secondary" type="submit">Propose agent</button></form></details></section>
+        <section id="connectors" class="panel full-width" aria-labelledby="connectors-heading"><div class="panel-heading"><div><p class="eyebrow">REACH THE WORLD</p><h2 id="connectors-heading">Connectors</h2><p>What your agents and bots can reach: email, calendar, your phone, posts, and any MCP server. Keys go to the macOS Keychain, never into the repo; this page never shows a saved key back.</p></div><span class="section-glyph" aria-hidden="true">⌁</span></div>
+          <div id="connector-list" class="app-grid connector-grid"><p class="empty">Loading connectors…</p></div>
+          <details id="mcp-add" class="form-details"><summary>Add an MCP server</summary><form id="mcp-form" class="form-stack">
+            <div class="input-pair"><div class="form-stack"><label for="mcp-id">Id</label><input id="mcp-id" name="id" required maxlength="40" pattern="[a-z][a-z0-9\-]{0,39}" placeholder="notion"></div><div class="form-stack"><label for="mcp-name">Name</label><input id="mcp-name" name="name" maxlength="80" placeholder="Notion"></div></div>
+            <fieldset class="radio-row"><legend>Transport</legend><label><input type="radio" name="transport" value="stdio" checked> stdio (a command on this Mac)</label><label><input type="radio" name="transport" value="http"> HTTP (a URL)</label></fieldset>
+            <div id="mcp-stdio" class="form-stack"><label for="mcp-command">Command</label><input id="mcp-command" name="command" maxlength="300" placeholder="npx"><label for="mcp-args">Arguments, one per line</label><textarea id="mcp-args" name="args" rows="3" maxlength="4000" placeholder="-y&#10;@notionhq/notion-mcp-server"></textarea></div>
+            <div id="mcp-http" class="form-stack" hidden><label for="mcp-url">URL</label><input id="mcp-url" name="url" type="url" maxlength="500" placeholder="https://example.com/mcp"></div>
+            <div class="form-stack"><span class="field-label" id="mcp-env-label">Environment (stdio) or headers (HTTP)</span><div id="mcp-env" class="env-rows" aria-labelledby="mcp-env-label"></div><button type="button" id="mcp-env-add" class="button subtle">+ Add a variable</button><p class="field-hint">Tick "secret" for tokens: the value goes to the Keychain as mcp-&lt;id&gt;-&lt;KEY&gt; and the file only says secret:mcp-&lt;id&gt;-&lt;KEY&gt;.</p></div>
+            <p id="mcp-error" class="form-error" role="alert" hidden></p>
+            <button class="button primary" type="submit">Add and test</button></form></details>
+          <h3 class="section-title">Models</h3>
+          <p class="context-note">Pick any model per chat or per bot, like T3 Chat. Web search is native on Anthropic only; other models get fetch_url.</p>
+          <div id="provider-list" class="stack provider-list"></div>
+          <div id="model-list" class="chips model-chips"></div>
+        </section>
+        <section id="skills" class="panel full-width" aria-labelledby="skills-heading"><div class="panel-heading"><div><p class="eyebrow">WHAT YOUR AGENTS KNOW</p><h2 id="skills-heading">Skills</h2><p>Every skill, largest first, with its model pin, uses in the last 30 days and parked notes.</p></div><span class="section-glyph" aria-hidden="true">✦</span></div>
+          <div id="skill-list" class="stack bounded-list"></div>
+          <details class="form-details"><summary>Add a skill</summary><form id="skill-form" class="form-stack"><label for="skill-name">Name</label><input id="skill-name" name="name" required maxlength="64" pattern="[a-z][a-z0-9\-]{0,63}" placeholder="e.g. show-packet"><label for="skill-description">When to use it</label><input id="skill-description" name="description" required maxlength="400" placeholder="Use when..."><div class="input-pair"><select id="skill-model" name="model" aria-label="Model"><option value="">No model pin</option><option value="haiku">haiku</option><option value="sonnet">sonnet</option><option value="opus">opus</option></select><select id="skill-home" name="home" aria-label="Where it lives"><option value="os">OS skills</option><option value="hermes">Hermes skills (agent/skills)</option></select></div><label for="skill-body">Instructions</label><textarea id="skill-body" name="body" rows="6" required maxlength="20000" placeholder="Steps, rules, and what done looks like."></textarea><p class="field-hint">Writes SKILL.md into the repo. Review and commit it like any other change.</p><button class="button secondary" type="submit">Add skill</button></form></details></section>
+        <section id="recos" class="panel" aria-labelledby="recos-heading"><div class="panel-heading"><div><p class="eyebrow">WHAT TO IMPROVE NEXT</p><h2 id="recos-heading">Recos</h2><p>Found in your setup and your week. Cart the good ones, copy the cart into Claude Code.</p></div><span class="section-glyph" aria-hidden="true">✚</span></div><div id="reco-list" class="stack bounded-list"></div></section>
+        <section id="routines" class="panel" aria-labelledby="routines-heading"><div class="panel-heading"><div><p class="eyebrow">ON A RHYTHM</p><h2 id="routines-heading">Routines</h2><p>What runs on its own, active or passive, and what should but does not.</p></div><div id="routines-kpis" class="kpis"></div></div><div id="routine-list" class="stack bounded-list"></div></section>
+        <section id="usage" class="panel" aria-labelledby="usage-heading"><div class="panel-heading"><div><p class="eyebrow">WHAT IT COSTS</p><h2 id="usage-heading">Usage</h2><p>Claude Code tokens from this Mac's session logs, and which chats have a cold cache.</p></div><div id="usage-kpis" class="kpis"></div></div><div id="usage-list" class="stack bounded-list"></div></section>
+        <section id="schedules" class="panel" aria-labelledby="schedules-heading"><div class="panel-heading"><div><p class="eyebrow">A STEADY RHYTHM</p><h2 id="schedules-heading">Schedules</h2><p>Set a cadence for workspace digests.</p></div><span class="section-glyph" aria-hidden="true">◷</span></div><div id="schedule-list" class="stack"></div><details class="form-details"><summary>Create a schedule</summary><form id="schedule-form" class="form-stack"><label for="schedule-name">Name</label><input id="schedule-name" name="name" required maxlength="120" placeholder="Morning reflection"><label for="schedule-interval">Repeat every</label><div class="input-pair"><input id="schedule-interval" name="interval" type="number" min="1" max="525600" value="1" step="1" required aria-label="Repeat interval"><select id="schedule-unit" name="unit" aria-label="Interval unit"><option value="86400">days</option><option value="3600">hours</option><option value="60">minutes</option></select></div><label for="schedule-workflow">Workflow</label><select id="schedule-workflow" name="workflow"></select><p class="field-hint">From 60 seconds to 365 days. The dashboard's worker runs due schedules.</p><button class="button secondary" type="submit">Save schedule</button></form></details></section>
+        <section id="memory" class="panel" aria-labelledby="memory-heading"><div class="panel-heading"><div><p class="eyebrow">KEEP WHAT MATTERS</p><h2 id="memory-heading">Memory</h2><p>Useful context, ready when you need it.</p></div><span class="section-glyph" aria-hidden="true">◇</span></div><div id="memory-list" class="stack bounded-list"></div><h3 class="section-title">What Claude loads (CLAUDE.md and MEMORY.md)</h3><div id="memory-files" class="stack bounded-list"></div><details id="memory-editor" class="form-details"><summary>Save or update a memory</summary><form id="memory-form" class="form-stack"><label for="memory-key">Key</label><input id="memory-key" name="key" required maxlength="120" placeholder="e.g. preferred-writing-style"><label for="memory-content">Content</label><textarea id="memory-content" name="content" rows="4" required maxlength="6000" placeholder="Something worth remembering…"></textarea><p class="field-hint">Saving an existing key updates that memory.</p><button class="button secondary" type="submit">Save memory</button></form></details></section>
+        <section id="activity" class="panel full-width" aria-labelledby="activity-heading"><div class="panel-heading"><div><p class="eyebrow">THE WORK AS IT HAPPENS</p><h2 id="activity-heading">Activity</h2><p>What the bots and agents actually did out in the world: sent, scheduled, drafted, queued for you. Then the workspace's own events.</p></div><label class="sr-only" for="activity-filter">Filter by bot</label><select id="activity-filter" aria-label="Filter by bot"><option value="">Everyone</option></select></div><div id="bot-activity-list" class="stack bounded-list"></div><h3 class="section-title">Workspace events</h3><div id="activity-list" class="timeline bounded-list"></div></section>
+        <section id="system" class="panel" aria-labelledby="system-heading"><div class="panel-heading"><div><p class="eyebrow">UNDER THE ARCH</p><h2 id="system-heading">System</h2><p>Reported capabilities and repository health.</p></div><button id="reconcile" class="button subtle">Reconcile</button></div><div id="brain-status" class="brain-status"></div><h3 class="section-title">Git</h3><div id="git-status" class="stack"></div><h3 class="section-title">Agent adapters</h3><div id="adapter-list" class="stack"></div><h3 class="section-title">Capabilities</h3><div id="capability-list" class="stack"></div></section>
+      </div>
+      <footer><span>InfiniteArch <span class="footer-divider">/</span> Agentic OS <span id="version"></span></span><span id="last-updated">Waiting for first sync</span></footer>
+    </main>
   </div>
-  <div class="columns">
-    <section id="activity" class="panel"><div class="panel-head"><div><h2>Activity</h2><p>Actual recorded project events</p></div></div><div id="activity-list" class="stack"></div></section>
-    <section id="skills" class="panel"><div class="panel-head"><div><h2>Your system</h2><p>Skills and connected engineering tools</p></div></div><div id="tool-list" class="stack"></div><div class="skill-label">BUNDLED WORKFLOWS</div><div id="skill-list" class="chips"></div></section>
-  </div>
-  <footer>Personal AI HQ · All project files remain in your local repository. Git pushes and deployment require separate approval.</footer>
-</main>
-</div>
-<dialog id="project-dialog"><form id="project-form" class="modal"><h2>Start a project</h2><p>Describe your idea in everyday language. You don't need a technical plan.</p><label>Project name<input name="name" maxlength="100" required placeholder="e.g. My Personal Research Assistant"></label><label>What's the idea?<textarea name="idea" maxlength="10000" required rows="5" placeholder="I want an assistant that…"></textarea></label><div class="buttons"><button type="button" class="secondary cancel">Cancel</button><button type="submit" class="primary">Create project</button></div></form></dialog>
-<dialog id="feature-dialog"><form id="feature-form" class="modal"><h2>Request a feature</h2><p>Describe what you want to change. This creates a request—not unapproved code.</p><input type="hidden" name="project"><label>Feature title<input name="title" maxlength="120" required placeholder="e.g. Daily email summary"></label><label>What should it do?<textarea name="description" maxlength="10000" rows="5" required></textarea></label><div class="buttons"><button type="button" class="secondary cancel">Cancel</button><button type="submit" class="primary">Save request</button></div></form></dialog>
+  <dialog id="newapp-dialog" aria-labelledby="newapp-title"><form id="newapp-form" class="modal form-stack"><div class="modal-heading"><div><p class="eyebrow">ASK FOR AN APP</p><h2 id="newapp-title">What should it do?</h2></div><button class="button icon-button" type="button" data-close="newapp-dialog" aria-label="Close">×</button></div><label for="newapp-name">Name</label><input id="newapp-name" name="name" required maxlength="60" placeholder="Art Shows"><label for="newapp-what">What it should do</label><textarea id="newapp-what" name="what" rows="4" required maxlength="4000" placeholder="Find juried photography shows and calls for entry in Texas and nationally. For each: title, venue, deadline, fee, url. Skip anything whose deadline has passed."></textarea><label for="newapp-cadence">How often</label><div class="input-pair"><select id="newapp-cadence" name="cadence"><option value="daily">Daily at</option><option value="hours">Every N hours</option></select><input id="newapp-when" name="when" value="06:45" maxlength="5" aria-label="Time or hours"></div><label class="checkbox-row"><input type="checkbox" id="newapp-notify" name="notify" checked> Put new finds in my Inbox</label><p class="field-hint">The Operator writes the app (a prompt, a schedule and a board) into hq/os/apps/. It shows up under APPS and runs on its own.</p><p id="newapp-error" class="form-error" role="alert" hidden></p><div id="newapp-reply" class="chat-md" hidden></div><div class="modal-actions"><button type="button" class="button secondary" data-close="newapp-dialog">Cancel</button><button type="submit" class="button primary" id="newapp-send">Create</button></div></form></dialog>
+  <dialog id="preferences-dialog" aria-labelledby="preferences-title"><form id="preferences-form" class="modal form-stack"><div class="modal-heading"><div><p class="eyebrow">MAKE YOURSELF AT HOME</p><h2 id="preferences-title">Your workspace, your way.</h2></div><button class="button icon-button" type="button" data-close="preferences-dialog" aria-label="Close customization">×</button></div><label for="theme-choice">Workspace theme</label><select id="theme-choice" name="theme"></select><fieldset><legend>Visible panels</legend><p class="field-hint">Choose the spaces you want to see. Overview always stays visible.</p><div id="panel-choices" class="checkbox-grid"></div></fieldset><p id="preferences-error" class="form-error" role="alert" hidden></p><div class="modal-actions"><button type="button" class="button secondary" data-close="preferences-dialog">Cancel</button><button type="submit" class="button primary">Save preferences</button></div></form></dialog>
 </body>
 </html>

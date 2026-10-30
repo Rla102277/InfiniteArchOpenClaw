@@ -1,9 +1,0 @@
-{
-  "id": "repository-guide",
-  "name": "Repository guide",
-  "purpose": "Read the repository handoff and ask the next discovery question. Implementation waits for an approved specification.",
-  "adapter": "hermes",
-  "locality": "local",
-  "network": "provider-dependent",
-  "status": "defined"
-}

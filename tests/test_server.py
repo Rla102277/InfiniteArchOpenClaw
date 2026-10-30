@@ -3,10 +3,7 @@ import json
 import tempfile
 import threading
 import unittest
-from pathlib import Path
-from unittest.mock import patch
 from http.server import ThreadingHTTPServer
-from aihq import core
 from aihq.server import make_handler
 
 
@@ -14,9 +11,6 @@ class APIIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.patch = patch.object(core, 'PROJECTS', Path(self.tmp.name))
-        self.patch.start()
-        self.addCleanup(self.patch.stop)
         self.server = ThreadingHTTPServer(('127.0.0.1', 0), make_handler('test-secret'))
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
@@ -38,18 +32,18 @@ class APIIntegrationTests(unittest.TestCase):
         con.close()
         return status, json.loads(payload)
 
-    def test_loopback_state_read_and_create_project(self):
+    def test_loopback_state_read(self):
         status, data = self.request('GET', '/api/state')
         self.assertEqual(status, 200)
-        self.assertEqual(data['projects'], [])
-        status, payload = self.request('POST', '/api/projects', {'name': 'My AI', 'idea': 'Help me organize tasks'}, 'test-secret')
-        self.assertEqual(status, 201)
-        self.assertEqual(payload['result']['id'], 'my-ai')
-        self.assertEqual(len(self.request('GET', '/api/state')[1]['projects']), 1)
+        self.assertIn('tools', data)
+        self.assertIn('skills', data)
+        self.assertNotIn('projects', data)
+
+    def test_legacy_project_routes_are_gone(self):
+        self.assertEqual(self.request('POST', '/api/projects', {'name': 'x', 'idea': 'y'}, 'test-secret')[0], 404)
 
     def test_csrf_and_host_rejection(self):
-        body = {'name': 'My AI', 'idea': 'Help me'}
-        self.assertEqual(self.request('POST', '/api/projects', body)[0], 403)
+        self.assertEqual(self.request('POST', '/api/os/action', {'action': 'reconcile'})[0], 403)
         self.assertEqual(self.request('GET', '/api/state', host='evil.example')[0], 403)
 
     def test_unknown_route(self):
