@@ -20,6 +20,7 @@ EXCLUDE_DIRS = {"apps/curator", "apps/darkroom", ".local", "__pycache__", "runti
 EXCLUDE_FILES = {
     "curator.json",
     "README.md",  # per-repo document; the target keeps its own
+    "SYSTEM.md",  # same: the status table differs per checkout
     "agents/critic.json", "agents/great-curator.json", "agents/hermes.json",
     "agents/photographer.json", "agents/scholar.json",
     ".agents/skills/critic/SKILL.md", ".agents/skills/curator-router/SKILL.md",
@@ -29,8 +30,8 @@ EXCLUDE_FILES = {
 EXCLUDE_DIR_PREFIXES = (".agents/skills/critic", ".agents/skills/curator-router",
                         ".agents/skills/great-curator", ".agents/skills/ia-log",
                         ".agents/skills/photographer", ".agents/skills/scholar")
-KEEP = {"LICENSE", ".git", "docs/PUBLISH.md", "docs/THIRD_PARTY_SKILLS.md",
-        "releases", "onboarding", "proposals", "projects"}
+KEEP = {"LICENSE", ".git", "README.md", "SYSTEM.md", "docs/PUBLISH.md",
+        "docs/THIRD_PARTY_SKILLS.md", "releases", "onboarding", "proposals", "projects"}
 
 
 def _excluded(rel: str) -> bool:

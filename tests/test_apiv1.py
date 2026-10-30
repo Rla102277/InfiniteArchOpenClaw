@@ -59,6 +59,17 @@ class ApiV1Tests(unittest.TestCase):
                 self.assertFalse(data["demo"])
                 self.assertIn("data", data)
 
+    def test_totals_and_activity_sentence_are_projected(self):
+        snap = _snapshot()
+        snap["totals"] = {"tasks": 213, "events": 940}
+        snap["activity"] = [{"time": "t", "sentence": "operator used gmail.send: done"}]
+        data = apiv1.envelope("tasks", snap)["data"]
+        self.assertEqual(data["total"], 213)
+        self.assertEqual(len(data["tasks"]), 1)  # the page stays small; the total is honest
+        data = apiv1.envelope("events", snap)["data"]
+        self.assertEqual(data["total"], 940)
+        self.assertEqual(data["activity"][0]["sentence"], "operator used gmail.send: done")
+
     def test_unknown_resource_raises(self):
         with self.assertRaises(ValueError):
             apiv1.envelope("memory", _snapshot())

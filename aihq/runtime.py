@@ -243,6 +243,8 @@ class Runtime:
                     "events": events, "adapters": adapters.statuses(), "themes": catalog["themes"],
                     "preferences": preferences, "panel_ids": PANELS,
                     "storage": "git" if self.git else "private",
+                    "totals": {t: connection.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                       for t in ("tasks", "events", "approvals", "schedules", "memories")},
                     "capabilities": self.capabilities(), "owner": {"id": core.owner_id(), "name": core.owner_name()}}
         # Module apps and workspace readers run outside the transaction: an app may log (its own connection).
         base["modules"] = self._modules_snapshot()

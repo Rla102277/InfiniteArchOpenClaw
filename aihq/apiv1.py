@@ -47,7 +47,7 @@ def _approval(row: dict) -> dict:
 
 
 def _event(row: dict) -> dict:
-    return _fields(row, ("time", "event", "message"))
+    return _fields(row, ("time", "event", "message", "sentence"))
 
 
 def _app(entry) -> dict:
@@ -89,7 +89,8 @@ def build(resource: str, snapshot: dict) -> dict:
     if resource == "agents":
         return {"agents": [_agent(a) for a in snapshot.get("agents") or []]}
     if resource == "tasks":
-        return {"tasks": [_task(t) for t in snapshot.get("tasks") or []]}
+        return {"tasks": [_task(t) for t in snapshot.get("tasks") or []],
+                "total": (snapshot.get("totals") or {}).get("tasks")}
     if resource == "schedules":
         return {"schedules": [_schedule(s) for s in snapshot.get("schedules") or []]}
     if resource == "runs":
@@ -97,9 +98,11 @@ def build(resource: str, snapshot: dict) -> dict:
         return {"runs": [_task(t) for t in done]}
     if resource == "events":
         return {"events": [_event(e) for e in snapshot.get("events") or []],
-                "activity": [_event(e) for e in snapshot.get("activity") or [] if isinstance(e, dict)]}
+                "activity": [_event(e) for e in snapshot.get("activity") or [] if isinstance(e, dict)],
+                "total": (snapshot.get("totals") or {}).get("events")}
     if resource == "approvals":
-        return {"approvals": [_approval(a) for a in snapshot.get("approvals") or []]}
+        return {"approvals": [_approval(a) for a in snapshot.get("approvals") or []],
+                "total": (snapshot.get("totals") or {}).get("approvals")}
     if resource == "conversations":
         return {"conversations": [_chat(c) for c in snapshot.get("chats") or []]}
     if resource == "themes":

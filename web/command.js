@@ -57,6 +57,8 @@ function stOf(v) { v = String(v || '').toLowerCase(); return BAD.has(v) ? 'error
 
 function domains() {
   const tasks = (v1.tasks && v1.tasks.tasks) || [];
+  const taskTotal = v1.tasks && v1.tasks.total;
+  const eventTotal = v1.events && v1.events.total;
   const schedules = (v1.schedules && v1.schedules.schedules) || [];
   const approvals = (v1.approvals && v1.approvals.approvals) || [];
   const agents = (v1.agents && v1.agents.agents) || [];
@@ -82,7 +84,7 @@ function domains() {
       rows: approvals.slice(0, 12).map((a) => ({ name: a.title || a.id, st: a.status === 'pending' ? 'warn' : 'ok', detail: a.status, link: '#tasks' })) },
     { id: 'tasks', name: 'TASKS', color: '#FF7A8A', panel: 'tasks',
       st: failed.length ? 'error' : 'ok',
-      kpis: [['Total', tasks.length], ['Failed', failed.length]],
+      kpis: [[taskTotal && taskTotal > tasks.length ? 'Recent ' + tasks.length + ' of ' + taskTotal : 'Total', tasks.length], ['Failed', failed.length]],
       rows: tasks.slice(0, 15).map((t) => ({ name: t.title || t.id, st: stOf(t.status), detail: t.status, link: '#tasks' })) },
     { id: 'schedules', name: 'SCHEDULES', color: '#9AD7FF', panel: 'schedules',
       st: schedules.some((s) => (s.history || [])[0] && s.history[0].status === 'failed') ? 'warn' : 'ok',
@@ -90,7 +92,7 @@ function domains() {
       rows: schedules.map((s) => ({ name: s.name || s.id, st: s.enabled ? 'ok' : 'warn', detail: (s.history || [])[0] ? s.history[0].status : '', link: '#schedules' })) },
     { id: 'activity', name: 'ACTIVITY', color: '#B7C4DC', panel: 'activity',
       st: 'ok',
-      kpis: [['Events', events.length], ['Actions', activity.length]],
+      kpis: [[eventTotal && eventTotal > events.length ? 'Recent ' + events.length + ' of ' + eventTotal : 'Events', events.length], ['Actions', activity.length]],
       rows: (activity.length ? activity : events).slice(0, 15).map((e) => ({
         name: e.sentence || e.message || e.event, st: 'ok', detail: e.time || '', link: '#activity' })) },
     { id: 'connectors', name: 'CONNECTORS', color: '#D8A6FF', panel: 'connectors',
